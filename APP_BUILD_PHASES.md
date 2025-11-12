@@ -2,8 +2,8 @@
 
 **Master tracking document for all development phases**
 
-**Last Updated:** 2025-11-12 12:50 GMT
-**Current Phase:** Phase 1 Complete - Ready for Phase 2
+**Last Updated:** 2025-11-12 (Current session)
+**Current Phase:** Phase 2.2 - PDF Import & Week 1/2 Logic (In Progress)
 **Project Location:** `~/Development/Apps/ios/familyhub-ios/`
 
 ---
@@ -15,8 +15,8 @@
 - [x] **Phase 1.2** - Testing & Polish ✅ *Complete*
 
 ### Phase 2: Timetable Module
-- [ ] **Phase 2.1** - Timetable Views (Day, Week, Fortnight) ← **NEXT**
-- [ ] **Phase 2.2** - PDF Import & Week 1/2 Logic
+- [x] **Phase 2.1** - Timetable Views (Day, Week, Fortnight) ✅ *Complete*
+- [ ] **Phase 2.2** - PDF Import & Week 1/2 Logic ← **IN PROGRESS**
 
 ### Phase 3: Settings & Polish
 - [ ] **Phase 3.1** - Settings Implementation
@@ -68,6 +68,151 @@ faeeb74 - feat(phase-1.2): add user switching and test data setup
 
 ### Ready for Phase 2.1
 Phase 1 foundation is solid and fully tested. Ready to implement timetable views.
+
+---
+
+## Phase 2.1 - Timetable Views ✅ COMPLETE
+
+### Status: Complete (12 Nov 2025)
+
+### Completed Tasks
+- [x] Implement TimetableModuleView with empty state
+- [x] Create sample data generator for testing (50 entries)
+- [x] Implement Day View with current period highlighting
+- [x] Implement Week View with all weekdays
+- [x] Implement Fortnight View with side-by-side comparison
+- [x] Add Week 1/2 selector with toggle functionality
+- [x] Add view mode picker (Day | Week | Fortnight)
+- [x] Implement TimetableValidator for data integrity checks
+- [x] Add "Load Sample Data" button for development testing
+- [x] Create TESTING_GUIDE.md with comprehensive test scenarios
+- [x] Test all three view modes with sample data
+- [x] Verify week switching functionality
+- [x] Verify current period detection logic
+
+### Test Results
+✅ **Sample data loading works perfectly** (50 entries, 25 per week)
+✅ **Day view displays correctly** with period cards and time display
+✅ **Week view shows all 5 weekdays** with entry counts and period details
+✅ **Fortnight view side-by-side comparison** working with Week 1/Week 2 indicators
+✅ **Week toggle functionality** switches between Week 1 (purple) and Week 2 (green)
+✅ **View mode picker** smoothly transitions between Day/Week/Fortnight
+✅ **TimetableValidator** reports correct entry counts and identifies issues
+✅ **Empty state displays** when no timetable data exists
+
+### Implementation Highlights
+
+**Views Created:**
+- `TimetableModuleView.swift` - Main container with empty state, PDF picker, sample data loader
+- `DayView.swift` - Single day schedule with current period highlighting
+- `WeekView.swift` - Full week (Mon-Fri) with all periods
+- `FortnightView.swift` - Side-by-side Week 1 and Week 2 comparison
+- `WeekSelector.swift` - Week 1/2 toggle with calculated week display
+
+**Services Created:**
+- `SampleTimetableData.swift` - Generates 50 realistic timetable entries for testing
+- `TimetableValidator.swift` - Validates data integrity and generates reports
+- `TimetableCalculator.swift` - Calculates current week based on start date
+
+**Key Features:**
+- **Sample Data**: 50 entries covering 2 weeks × 5 days with realistic subjects, teachers, rooms
+- **Week Detection**: Automatic calculation of Week 1 vs Week 2 based on start date
+- **Current Period**: Blue highlighting for active period during school hours (09:00-14:25)
+- **Validation**: Console reports showing entry counts, distribution, and any issues
+- **Empty State**: User-friendly import prompt with "Load Sample Data" dev button
+
+### What's Ready
+- All three timetable views fully implemented and tested
+- Sample data generator for development/testing
+- Week 1/2 logic foundation in place
+- Validation and debugging tools
+- Empty state with PDF import prompt
+- TESTING_GUIDE.md documentation
+
+### Ready for Phase 2.2
+Phase 2.1 foundation is complete. All views are working with sample data. Now ready to implement PDF import functionality to populate real timetable data.
+
+---
+
+## Phase 2.2 - PDF Import & Week 1/2 Logic ⚠️ IN PROGRESS
+
+### Status: Troubleshooting PDF Parser (12 Nov 2025)
+
+### Completed Tasks
+- [x] Implement PDFService.swift for PDF processing
+- [x] Add Apple Vision OCR integration (VNRecognizeTextRequest)
+- [x] Create PDFDocumentPicker for file selection
+- [x] Implement landscape PDF parser with column-based detection
+- [x] Add X-position clustering for column detection
+- [x] Implement sequential triplet parser (Subject/Teacher/Room groups)
+- [x] Add Delete Timetable functionality
+- [x] Add Re-import PDF menu option
+- [x] Extensive debug logging for OCR and parsing
+
+### Current Status: Parser Tuning
+
+**What's Working:**
+✅ **PDF file picker** - Successfully opens and selects PDFs
+✅ **OCR text extraction** - Apple Vision detecting 128 text items with positions
+✅ **Column detection** - Successfully identifying 9 of 10 day columns using X-position clustering
+✅ **Column assignment** - Correctly assigning Week 1/2 and day names to columns
+
+**Current Issue:**
+⚠️ **Y-span threshold too strict** - Sequential triplet parser rejecting all valid entries
+
+**The Problem:**
+- Parser looks for groups of 3 items (Subject, Teacher, Room) within 0.025 Y-span
+- Actual OCR data shows items spread 0.031-0.04 apart vertically
+- Example from Monday Week 1:
+  - 'Room 053' at y=0.519
+  - 'History' at y=0.501
+  - 'ERE' at y=0.488
+  - Y-span = 0.031 > 0.025 threshold → rejected
+
+**The Fix:**
+- **File:** `PDFService.swift` line 301
+- **Change:** Increase Y-span threshold from `0.025` to `0.035` or `0.04`
+- **Impact:** One-line change, should unlock extraction of ~70-80 entries
+
+### Implementation Details
+
+**PDF Layout (Landscape):**
+- **Columns:** 10 day columns (Week 1 Mon-Fri, Week 2 Mon-Fri)
+- **Rows:** 7-8 periods vertically
+- **Cell Content:** 3 items per cell (Subject, Teacher code, Room number)
+
+**Parser Strategy:**
+1. **OCR Extraction:** Use Apple Vision to extract all text with bounding boxes
+2. **Filter Noise:** Remove title area and period labels (X > 0.10 threshold)
+3. **Cluster Columns:** Group items by X position (tolerance 0.03)
+4. **Assign Days:** Map clusters to expected day order (1Mon, 1Tue, ... 2Fri)
+5. **Sequential Parsing:** For each column, slide through items in groups of 3
+6. **Pattern Matching:** Identify Room (`^Room\s+\d+`), Teacher (`^[A-Z]{3,4}`), Subject (remaining)
+7. **Create Entries:** Build ScheduleEntry objects for valid triplets
+
+**Challenges Encountered:**
+- OCR mangling day headers into garbled text
+- Portrait/landscape layout confusion (resolved)
+- Filter threshold tuning (multiple iterations)
+- Y-span threshold too strict (current blocker)
+- Missing Week 2 Friday column (9 of 10 detected)
+
+### Next Steps
+1. [ ] Fix Y-span threshold (0.025 → 0.035/0.04)
+2. [ ] Test full import with real PDF
+3. [ ] Verify ~70-80 entries extracted
+4. [ ] Investigate missing Week 2 Friday column
+5. [ ] Handle edge cases (Registration, missing teacher codes)
+6. [ ] Remove debug logging for production
+7. [ ] Complete Phase 2.2 testing per TESTING_GUIDE.md
+
+### User Feedback Notes
+- PDF is from scanned paper timetable (only available format)
+- Must work with existing PDF (no alternative data sources)
+- User has expressed urgency to complete Phase 2.2
+
+### Ready for Phase 2.3 (Once Complete)
+Once PDF import is working and extracting all entries correctly, Phase 2.2 will be complete and app will be ready for user acceptance testing.
 
 ---
 
@@ -232,21 +377,21 @@ Section {
 
 ---
 
-## Next Phase Preview: 2.1 - Timetable Views
+## Next Phase Preview: 2.3 - Testing & Polish
 
 **Focus:**
-- Empty state designs for timetable views
-- Week 1/2 navigation UI
-- Day view (today's classes)
-- Week view (Monday-Friday)
-- Fortnight view (both weeks side-by-side)
-- Current period highlighting
+- Complete user acceptance testing with real PDF data
+- Fix any UI/UX issues discovered during testing
+- Optimize performance if needed
+- Polish animations and transitions
+- Verify all TESTING_GUIDE.md scenarios pass
+- Prepare for Phase 3 (Settings implementation)
 
 **Prerequisites:**
-- Phase 1 foundation complete ✅
-- Switch User working
-- All debugging cleaned up
-- Git commit with clean state
+- Phase 2.1 complete ✅
+- Phase 2.2 PDF import working ⚠️ (blocked on Y-span fix)
+- Real timetable data successfully importing
+- All three views displaying correctly with real data
 
 ---
 
