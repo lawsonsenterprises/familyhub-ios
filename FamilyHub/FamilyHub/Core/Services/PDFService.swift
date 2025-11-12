@@ -103,12 +103,8 @@ struct PDFService {
             } else {
                 // Use OCR for scanned documents
                 print("⚠️ No text found, using OCR for page \(pageIndex + 1)")
-                if let ocrText = performOCR(on: page) {
-                    print("\n📄 ===== PAGE \(pageIndex + 1) OCR TEXT =====")
-                    print(ocrText)
-                    print("===== END PAGE \(pageIndex + 1) =====\n")
-
-                    let pageEntries = parseTimetableFromOCR(ocrText)
+                if let observations = performOCRWithPositions(on: page) {
+                    let pageEntries = parseTimetableFromOCRPositions(observations)
                     print("✅ Extracted \(pageEntries.count) entries from OCR on page \(pageIndex + 1)")
                     entries.append(contentsOf: pageEntries)
                 }
@@ -118,10 +114,10 @@ struct PDFService {
         return entries
     }
 
-    /// Perform OCR on a PDF page using Vision framework
+    /// Perform OCR on a PDF page using Vision framework with positional data
     /// - Parameter page: PDF page to process
-    /// - Returns: Recognized text or nil if OCR fails
-    private static func performOCR(on page: PDFPage) -> String? {
+    /// - Returns: Array of text observations with bounding boxes
+    private static func performOCRWithPositions(on page: PDFPage) -> [VNRecognizedTextObservation]? {
         // Render page as image
         let pageRect = page.bounds(for: .mediaBox)
         let renderer = UIGraphicsImageRenderer(size: pageRect.size)
@@ -148,25 +144,193 @@ struct PDFService {
 
         do {
             try handler.perform([request])
-
-            guard let observations = request.results else {
-                print("❌ No OCR observations")
-                return nil
-            }
-
-            // Combine all recognized text
-            let recognizedText = observations.compactMap { observation in
-                observation.topCandidates(1).first?.string
-            }.joined(separator: "\n")
-
-            return recognizedText.isEmpty ? nil : recognizedText
+            return request.results
         } catch {
             print("❌ OCR failed: \(error.localizedDescription)")
             return nil
         }
     }
 
-    /// Parse timetable from OCR text (table format)
+    /// Perform OCR on a PDF page using Vision framework
+    /// - Parameter page: PDF page to process
+    /// - Returns: Recognized text or nil if OCR fails
+    private static func performOCR(on page: PDFPage) -> String? {
+        guard let observations = performOCRWithPositions(on: page) else {
+            return nil
+        }
+
+        // Combine all recognized text
+        let recognizedText = observations.compactMap { observation in
+            observation.topCandidates(1).first?.string
+        }.joined(separator: "\n")
+
+        return recognizedText.isEmpty ? nil : recognizedText
+    }
+
+    /// Parse timetable from OCR observations using positional data
+    /// - Parameter observations: Vision OCR observations with bounding boxes
+    /// - Returns: Array of schedule entries
+    private static func parseTimetableFromOCRPositions(_ observations: [VNRecognizedTextObservation]) -> [ScheduleEntry] {
+        var entries: [ScheduleEntry] = []
+
+        // Group observations by text content
+        struct TextItem {
+            let text: String
+            let bounds: CGRect
+        }
+
+        let textItems = observations.compactMap { observation -> TextItem? in
+            guard let text = observation.topCandidates(1).first?.string else { return nil }
+            return TextItem(text: text, bounds: observation.boundingBox)
+        }
+
+        print("🔍 Processing \(textItems.count) text items with positions...")
+
+        // The timetable layout is: ROWS = Days (vertical), COLUMNS = Periods (horizontal)
+        // Day headers like "1 Mon", "1 Tue" appear as row labels
+        // Each row contains: Day header, then cells with Subject/Teacher/Room for each period
+
+        // Find day headers (format: "1 Mon", "2 Tue", etc.)
+        let dayPattern = #"^([12])\s*(Mon|Tue|Wed|Thu|Fri)"#
+        var dayRows: [(week: WeekType, day: DayOfWeek, y: CGFloat)] = []
+
+        for item in textItems {
+            if item.text.range(of: dayPattern, options: .regularExpression) != nil {
+                let weekNum = String(item.text.prefix(1))
+                let dayAbbr = item.text.replacingOccurrences(of: weekNum, with: "")
+                    .trimmingCharacters(in: .whitespaces)
+
+                let week: WeekType = weekNum == "1" ? .week1 : .week2
+                if let day = parseDayAbbreviation(dayAbbr) {
+                    dayRows.append((week: week, day: day, y: item.bounds.midY))
+                    print("📌 Found row: \(week.rawValue) \(day.rawValue) at y=\(item.bounds.midY)")
+                }
+            }
+        }
+
+        // Sort rows by Y position (top to bottom in Vision coordinates: higher Y = higher on page)
+        dayRows.sort { $0.y > $1.y }
+
+        print("🔍 Found \(dayRows.count) day rows")
+
+        // For each day row, find all text items on that row and parse periods
+        for (rowIndex, dayRow) in dayRows.enumerated() {
+            // Define row boundaries (Y range)
+            let rowMaxY = rowIndex == 0 ? 1.0 : (dayRows[rowIndex - 1].y + dayRow.y) / 2
+            let rowMinY = rowIndex == dayRows.count - 1 ? 0.0 : (dayRow.y + dayRows[rowIndex + 1].y) / 2
+
+            // Get all text items in this row, sorted left to right
+            var rowItems = textItems.filter { item in
+                item.bounds.midY < rowMaxY && item.bounds.midY >= rowMinY
+            }.sorted { $0.bounds.midX < $1.bounds.midX }
+
+            // Remove the day header itself
+            rowItems.removeAll { $0.text.range(of: dayPattern, options: .regularExpression) != nil }
+
+            print("📋 Row \(dayRow.week.rawValue) \(dayRow.day.rawValue): \(rowItems.count) items")
+
+            // Group items by X position into period columns (each period has 3 items: subject, teacher, room)
+            // Items within the same period cell have very similar X positions (vertically stacked)
+
+            // Debug: Print some X positions
+            if rowItems.count > 0 {
+                let xPositions = rowItems.prefix(min(15, rowItems.count)).map { String(format: "%.3f", $0.bounds.midX) }
+                print("  📊 Sample X positions: \(xPositions.joined(separator: ", "))")
+            }
+
+            // Sort by X position
+            let sortedByX = rowItems.sorted { $0.bounds.midX < $1.bounds.midX }
+
+            // Group items by detecting LARGE gaps between periods (not small intra-period variations)
+            // Items within a period vary by ~0.02-0.08, gaps between periods are ~0.06-0.10
+            var periods: [[TextItem]] = []
+            var currentPeriod: [TextItem] = []
+            var lastX: CGFloat = -1.0
+
+            for item in sortedByX {
+                if lastX < 0 {
+                    // First item
+                    currentPeriod.append(item)
+                    lastX = item.bounds.midX
+                } else {
+                    // Check GAP between this item and previous item
+                    let gap = item.bounds.midX - lastX
+
+                    // Large gap (>0.065) means new period, small gap means same period
+                    if gap > 0.065 {
+                        // Start new period
+                        if !currentPeriod.isEmpty {
+                            periods.append(currentPeriod)
+                        }
+                        currentPeriod = [item]
+                    } else {
+                        // Same period
+                        currentPeriod.append(item)
+                    }
+                    lastX = item.bounds.midX
+                }
+            }
+            if !currentPeriod.isEmpty {
+                periods.append(currentPeriod)
+            }
+
+            print("  🔹 Found \(periods.count) periods in this row")
+
+            // Parse each period
+            for (periodIndex, periodItems) in periods.enumerated() {
+                // Sort items vertically within the period cell (top to bottom)
+                let sortedItems = periodItems.sorted { $0.bounds.midY > $1.bounds.midY }
+
+                guard sortedItems.count >= 3 else {
+                    print("  ⚠️ Period \(periodIndex) has only \(sortedItems.count) items, skipping")
+                    continue
+                }
+
+                let subjectText = sortedItems[0].text
+                let teacherText = sortedItems[1].text
+                let roomText = sortedItems[2].text
+
+                // Validate this is an entry (teacher = 3-4 caps, room starts with "Room")
+                let teacherPattern = #"^[A-Z]{3,4}$"#
+                let roomPattern = #"^Room\s+\d+"#
+
+                if teacherText.range(of: teacherPattern, options: .regularExpression) != nil &&
+                   roomText.range(of: roomPattern, options: .regularExpression) != nil {
+
+                    let room = roomText.replacingOccurrences(of: "Room", with: "", options: .caseInsensitive)
+                        .trimmingCharacters(in: .whitespaces)
+
+                    var subject = subjectText
+                    var period = periodIndex
+
+                    // Handle registration
+                    if subjectText.contains("Registration") {
+                        subject = "Registration"
+                        period = subjectText.contains("AM") ? 0 : periodIndex
+                    } else {
+                        // Regular periods start at 1
+                        period = periodIndex == 0 ? 1 : periodIndex
+                    }
+
+                    let entry = ScheduleEntry(
+                        dayOfWeek: dayRow.day,
+                        period: period,
+                        subject: subject,
+                        room: room,
+                        week: dayRow.week,
+                        teacher: teacherText
+                    )
+
+                    print("  ✅ P\(period): \(subject) (\(teacherText), Room \(room))")
+                    entries.append(entry)
+                }
+            }
+        }
+
+        return entries
+    }
+
+    /// Parse timetable from OCR text (multi-line cell format)
     /// - Parameter text: OCR text from scanned timetable
     /// - Returns: Array of schedule entries
     private static func parseTimetableFromOCR(_ text: String) -> [ScheduleEntry] {
@@ -175,37 +339,121 @@ struct PDFService {
 
         print("🔍 Parsing OCR text with \(lines.count) lines...")
 
-        // The timetable format is:
-        // Row format: DayLabel | Subject Teacher Room | Subject Teacher Room | ...
-        // Days are like "1Mon", "1Tue", "2Mon" (week number + day abbreviation)
+        // The timetable format from OCR is:
+        // Day line: "1Mon" or "1 Mon" (week number + day abbreviation)
+        // Then groups of 3 lines per period:
+        //   - Subject name (or "AM Registration"/"PM Registration")
+        //   - Teacher code (3 letters)
+        //   - Room (format "Room ###")
 
-        for (index, line) in lines.enumerated() {
+        var currentWeek: WeekType?
+        var currentDay: DayOfWeek?
+        var currentPeriod = 0
+        var lineIndex = 0
+
+        while lineIndex < lines.count {
+            let line = lines[lineIndex]
+
             // Skip empty lines
-            guard !line.isEmpty else { continue }
+            if line.isEmpty {
+                lineIndex += 1
+                continue
+            }
 
-            // Try to match day pattern (e.g., "1Mon", "2Fri")
-            if let match = line.range(of: #"^([12])(Mon|Tue|Wed|Thu|Fri)"#, options: .regularExpression) {
-                let dayPrefix = String(line[match])
-                let weekNum = String(dayPrefix.prefix(1))
-                let dayAbbr = String(dayPrefix.dropFirst())
+            // Try to match day pattern (e.g., "1Mon", "1 Mon", "2Fri")
+            if let match = line.range(of: #"^([12])\s*(Mon|Tue|Wed|Thu|Fri)"#, options: .regularExpression) {
+                let matchedText = String(line[match])
 
-                let week: WeekType = weekNum == "1" ? .week1 : .week2
-                guard let day = parseDayAbbreviation(dayAbbr) else { continue }
+                // Extract week number (first character)
+                let weekNum = String(matchedText.prefix(1))
 
-                print("📌 Line \(index + 1): Found day: \(week.rawValue) \(day.rawValue)")
+                // Extract day abbreviation (after week number and optional space)
+                let dayAbbr = matchedText.replacingOccurrences(of: weekNum, with: "")
+                    .trimmingCharacters(in: .whitespaces)
 
-                // Rest of line contains period data
-                let periodData = String(line[match.upperBound...]).trimmingCharacters(in: .whitespaces)
+                currentWeek = weekNum == "1" ? .week1 : .week2
+                currentDay = parseDayAbbreviation(dayAbbr)
 
-                // Split by common separators and parse each chunk
-                let chunks = periodData.components(separatedBy: CharacterSet(charactersIn: "|"))
+                print("📌 Line \(lineIndex + 1): Found day: \(currentWeek?.rawValue ?? "") \(currentDay?.rawValue ?? "")")
 
-                for (periodIndex, chunk) in chunks.enumerated() where !chunk.trimmingCharacters(in: .whitespaces).isEmpty {
-                    if let entry = parseTableCell(chunk, week: week, day: day, period: periodIndex + 1) {
-                        print("✅ Parsed: Period \(entry.period) - \(entry.subject)")
-                        entries.append(entry)
-                    }
+                // Reset period counter for new day (starts with Tut/Registration, then periods 1-5)
+                currentPeriod = 0
+                lineIndex += 1
+                continue
+            }
+
+            // If we have a current day, try to parse period entries
+            if let week = currentWeek, let day = currentDay {
+                // Check if we have at least 3 lines remaining for a complete entry
+                guard lineIndex + 2 < lines.count else {
+                    lineIndex += 1
+                    continue
                 }
+
+                let subjectLine = lines[lineIndex]
+                let teacherLine = lines[lineIndex + 1]
+                let roomLine = lines[lineIndex + 2]
+
+                // Skip if any line is empty
+                if subjectLine.isEmpty || teacherLine.isEmpty || roomLine.isEmpty {
+                    lineIndex += 1
+                    continue
+                }
+
+                // Check if this looks like a valid entry
+                // Teacher should be 3-4 capital letters, Room should contain "Room"
+                let teacherPattern = #"^[A-Z]{3,4}$"#
+                let roomPattern = #"^Room\s+\d+"#
+
+                if teacherLine.range(of: teacherPattern, options: .regularExpression) != nil &&
+                   roomLine.range(of: roomPattern, options: .regularExpression) != nil {
+
+                    // Extract room number
+                    let room = roomLine.replacingOccurrences(of: "Room", with: "", options: .caseInsensitive)
+                        .trimmingCharacters(in: .whitespaces)
+
+                    // Handle registration periods vs regular periods
+                    var subject = subjectLine
+                    var period = currentPeriod
+
+                    // Map registration to period 0 (AM) or special period (PM)
+                    if subjectLine.contains("Registration") {
+                        subject = "Registration"
+                        if subjectLine.contains("AM") {
+                            period = 0  // AM Registration = Period 0
+                        } else if subjectLine.contains("PM") {
+                            currentPeriod += 1
+                            period = currentPeriod  // PM Registration gets next period number
+                        } else {
+                            period = 0  // Default to period 0 if no AM/PM specified
+                        }
+                    } else {
+                        // Regular period - increment counter
+                        currentPeriod += 1
+                        period = currentPeriod
+                    }
+
+                    let entry = ScheduleEntry(
+                        dayOfWeek: day,
+                        period: period,
+                        subject: subject,
+                        room: room,
+                        week: week,
+                        teacher: teacherLine
+                    )
+
+                    print("✅ Parsed: \(week.rawValue) \(day.rawValue) Period \(period) - \(subject) (\(teacherLine), Room \(room))")
+                    entries.append(entry)
+
+                    // Move past the 3 lines we just processed
+                    lineIndex += 3
+                } else {
+                    // Doesn't match expected pattern, move to next line
+                    lineIndex += 1
+                }
+            } else {
+                // No current day context, skip line
+                lineIndex += 1
             }
         }
 

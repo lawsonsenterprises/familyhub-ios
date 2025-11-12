@@ -129,31 +129,46 @@ Entries per day:
 - [ ] Confirm different room assignments visible
 - [ ] Validate time differences (if any)
 
-### Scenario 5: PDF Import Testing (Optional)
+### Scenario 5: PDF Import Testing ⚠️ CRITICAL TEST
 
-**Note:** Requires a timetable PDF file in the simulator.
-
-**Setup:**
-1. Drag a PDF timetable into iOS simulator
-2. Save to Files app or iCloud Drive
+**Prerequisites:**
+1. PDF timetable must be in simulator Files app
+2. **IMPORTANT:** Delete existing timetable first (tap "..." menu → Delete Timetable)
 
 **Steps:**
-1. **Start with fresh install** or delete timetable data
-2. **Navigate to Timetable tab**
-3. **Tap "Import Timetable PDF"**
-4. **Select PDF** from file picker
-5. **Wait for import** (loading overlay appears)
-6. **Check console output** for extraction report
+1. **Open Timetable tab** in FamilyHub app
+2. **Tap "Import Timetable PDF"** button
+3. **Select your PDF** from file picker
+4. **Wait for import** (loading overlay appears with progress indicator)
+5. **Check Xcode Console** for detailed extraction report
 
-**Expected Console Output:**
+**Expected Console Output (FULL IMPORT):**
 ```
-🔵 Extracted X entries from PDF
+🔵 Performing OCR on page 1...
+🔹 OCR found X text observations
+
+[Row processing logs...]
+🔹 Found 5-7 periods in this row
+🔹 Period 0: X items → Parsing...
+✅ Created entry: [Subject] ([Teacher]) in Room [X]
+...
+
+🔵 Extracted 70 entries from PDF
 
 === Timetable Validation Report ===
-Total Entries: X
-Week 1 Entries: Y
-Week 2 Entries: Z
-...
+Total Entries: 70
+Week 1 Entries: 35
+Week 2 Entries: 35
+
+Entries per day:
+  Monday: 14
+  Tuesday: 14
+  Wednesday: 14
+  Thursday: 14
+  Friday: 14
+
+✅ No issues found!
+===================================
 
 ✅ PDF data imported successfully!
 ```
@@ -162,16 +177,21 @@ Week 2 Entries: Z
 - [ ] File picker opens correctly
 - [ ] Can navigate to PDF location
 - [ ] Loading overlay displays during import
-- [ ] Console shows extraction count
-- [ ] Validation report appears
-- [ ] Data loads into views
-- [ ] All view modes work with imported data
+- [ ] Console shows "🔹 Found 5-7 periods in this row" (NOT 20+)
+- [ ] Console shows ~70 total entries extracted
+- [ ] Validation report shows 35 per week, 14 per day
+- [ ] All 10 days have data (Week 1 & 2, Mon-Fri)
+- [ ] Data loads into all three views (Day/Week/Fortnight)
+- [ ] Each period shows Subject, Teacher, Room correctly
 
-**If Import Fails:**
-- Check console for error messages
-- Verify PDF is valid (not corrupted)
-- Ensure PDF contains recognizable text
-- Check PDF format matches expected structure
+**Gap-Based Clustering Fix:**
+The parser now uses gap detection (0.065 threshold) to identify period boundaries. Large gaps between items indicate new periods, small gaps indicate items within the same period. This fixes the previous issue where items were incorrectly split.
+
+**If Import Shows < 70 Entries:**
+- Check console for "🔹 Found X periods" - should be 5-7, not 20+
+- Check for "Period X has only 1-2 items, skipping" warnings
+- Look for parsing errors or missing data
+- Verify all 10 days are processed (2 weeks × 5 days)
 
 ## Known Issues / Limitations
 
