@@ -135,18 +135,33 @@ struct TimetableModuleView: View {
             }
 
             if user.isStudent {
-                Button {
-                    showPDFPicker = true
-                } label: {
-                    Label("Import Timetable PDF", systemImage: "doc.badge.plus")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.vertical, Spacing.sm)
-                        .background(Color.accentApp)
-                        .clipShape(Capsule())
+                VStack(spacing: Spacing.md) {
+                    Button {
+                        showPDFPicker = true
+                    } label: {
+                        Label("Import Timetable PDF", systemImage: "doc.badge.plus")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, Spacing.lg)
+                            .padding(.vertical, Spacing.sm)
+                            .background(Color.accentApp)
+                            .clipShape(Capsule())
+                    }
+                    .disabled(isImporting)
+
+                    Button {
+                        loadSampleData()
+                    } label: {
+                        Label("Load Sample Data", systemImage: "doc.text")
+                            .font(.subheadline)
+                            .foregroundColor(.accentApp)
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.vertical, Spacing.xs)
+                            .background(Color.accentApp.opacity(0.1))
+                            .clipShape(Capsule())
+                    }
+                    .disabled(isImporting)
                 }
-                .disabled(isImporting)
             }
 
             // Show error if import failed
@@ -188,6 +203,46 @@ struct TimetableModuleView: View {
             selectedWeek = calculatedWeek
             manualOverride = false
         }
+    }
+
+    private func loadSampleData() {
+        isImporting = true
+        importError = nil
+
+        // Generate sample entries
+        let entries = SampleTimetableData.generateSampleEntries()
+
+        if let existingTimetable = user.timetableData {
+            // Clear existing entries
+            existingTimetable.scheduleEntries.removeAll()
+
+            // Add new entries
+            for entry in entries {
+                existingTimetable.scheduleEntries.append(entry)
+            }
+
+            existingTimetable.markUpdated()
+        } else {
+            // Create new timetable
+            let timetableData = TimetableData(owner: user)
+
+            // Add entries
+            for entry in entries {
+                timetableData.scheduleEntries.append(entry)
+            }
+
+            timetableData.markUpdated()
+            user.timetableData = timetableData
+            modelContext.insert(timetableData)
+        }
+
+        // Save context
+        try? modelContext.save()
+
+        // Update selected week
+        updateSelectedWeek()
+
+        isImporting = false
     }
 
     private func importPDF(from url: URL) async {
