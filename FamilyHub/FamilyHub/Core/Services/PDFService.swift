@@ -74,8 +74,11 @@ struct PDFService {
     /// - Returns: Array of schedule entries extracted from the PDF
     static func extractScheduleData(from pdfData: Data) -> [ScheduleEntry] {
         guard let document = PDFDocument(data: pdfData) else {
+            print("❌ Failed to create PDFDocument from data")
             return []
         }
+
+        print("📄 PDF has \(document.pageCount) page(s)")
 
         var entries: [ScheduleEntry] = []
 
@@ -83,11 +86,17 @@ struct PDFService {
         for pageIndex in 0..<document.pageCount {
             guard let page = document.page(at: pageIndex),
                   let pageContent = page.string else {
+                print("⚠️ Could not extract text from page \(pageIndex + 1)")
                 continue
             }
 
+            print("\n📄 ===== PAGE \(pageIndex + 1) TEXT =====")
+            print(pageContent)
+            print("===== END PAGE \(pageIndex + 1) =====\n")
+
             // Parse the page content
             let pageEntries = parseTimetableText(pageContent)
+            print("✅ Extracted \(pageEntries.count) entries from page \(pageIndex + 1)")
             entries.append(contentsOf: pageEntries)
         }
 
@@ -104,20 +113,26 @@ struct PDFService {
         var currentWeek: WeekType?
         var currentDay: DayOfWeek?
 
-        for line in lines {
+        print("🔍 Parsing \(lines.count) lines...")
+
+        for (index, line) in lines.enumerated() {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard !trimmed.isEmpty else { continue }
 
             // Detect week headers (e.g., "Week 1", "Week 2")
             if trimmed.contains("Week 1") {
+                print("📌 Line \(index + 1): Found Week 1 header")
                 currentWeek = .week1
                 continue
             } else if trimmed.contains("Week 2") {
+                print("📌 Line \(index + 1): Found Week 2 header")
                 currentWeek = .week2
                 continue
             }
 
             // Detect day headers
             if let day = detectDayOfWeek(from: trimmed) {
+                print("📌 Line \(index + 1): Found day header: \(day.rawValue)")
                 currentDay = day
                 continue
             }
@@ -126,10 +141,12 @@ struct PDFService {
             if let week = currentWeek,
                let day = currentDay,
                let entry = parsePeriodLine(trimmed, week: week, day: day) {
+                print("✅ Line \(index + 1): Parsed entry: \(entry.subject) - Period \(entry.period)")
                 entries.append(entry)
             }
         }
 
+        print("📊 Total entries parsed: \(entries.count)")
         return entries
     }
 
