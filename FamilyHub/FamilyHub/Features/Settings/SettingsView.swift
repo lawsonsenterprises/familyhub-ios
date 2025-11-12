@@ -11,6 +11,7 @@ import SwiftData
 
 struct SettingsView: View {
     let user: User
+    @Binding var selectedUser: User?
 
     @Environment(\.modelContext) private var modelContext
     @Query private var users: [User]
@@ -55,6 +56,19 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text("Profile")
+                }
+                .listRowBackground(Color.backgroundTertiary)
+
+                // Switch User section
+                Section {
+                    Button {
+                        selectedUser = nil
+                        HapticManager.light()
+                    } label: {
+                        Label("Switch User", systemImage: "arrow.left.arrow.right")
+                    }
+                } header: {
+                    Text("Account")
                 }
                 .listRowBackground(Color.backgroundTertiary)
 
@@ -125,6 +139,6 @@ struct SettingsView: View {
 
 #Preview {
     let user = User(name: "Amelia", role: .student)
-    return SettingsView(user: user)
+    return SettingsView(user: user, selectedUser: .constant(user))
         .modelContainer(for: [User.self], inMemory: true)
 }

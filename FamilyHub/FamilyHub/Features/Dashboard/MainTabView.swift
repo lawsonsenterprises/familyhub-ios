@@ -11,6 +11,7 @@ import SwiftData
 
 struct MainTabView: View {
     let user: User
+    @Binding var selectedUser: User?
 
     @State private var selectedTab: Tab = .dashboard
 
@@ -28,7 +29,7 @@ struct MainTabView: View {
                 }
                 .tag(Tab.timetable)
 
-            SettingsView(user: user)
+            SettingsView(user: user, selectedUser: $selectedUser)
                 .tabItem {
                     Label("Settings", systemImage: "gearshape.fill")
                 }
@@ -48,6 +49,6 @@ struct MainTabView: View {
 
 #Preview {
     let user = User(name: "Amelia", role: .student)
-    return MainTabView(user: user)
+    return MainTabView(user: user, selectedUser: .constant(user))
         .modelContainer(for: [User.self], inMemory: true)
 }
