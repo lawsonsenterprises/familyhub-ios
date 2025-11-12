@@ -212,6 +212,8 @@ struct TimetableModuleView: View {
         // Generate sample entries
         let entries = SampleTimetableData.generateSampleEntries()
 
+        print("🔵 Loading \(entries.count) sample entries...")
+
         if let existingTimetable = user.timetableData {
             // Clear existing entries
             existingTimetable.scheduleEntries.removeAll()
@@ -222,6 +224,10 @@ struct TimetableModuleView: View {
             }
 
             existingTimetable.markUpdated()
+
+            // Validate and print report
+            let report = TimetableValidator.validate(existingTimetable)
+            TimetableValidator.printReport(report)
         } else {
             // Create new timetable
             let timetableData = TimetableData(owner: user)
@@ -234,6 +240,10 @@ struct TimetableModuleView: View {
             timetableData.markUpdated()
             user.timetableData = timetableData
             modelContext.insert(timetableData)
+
+            // Validate and print report
+            let report = TimetableValidator.validate(timetableData)
+            TimetableValidator.printReport(report)
         }
 
         // Save context
@@ -242,6 +252,7 @@ struct TimetableModuleView: View {
         // Update selected week
         updateSelectedWeek()
 
+        print("✅ Sample data loaded successfully!")
         isImporting = false
     }
 
@@ -255,6 +266,8 @@ struct TimetableModuleView: View {
 
             // Extract schedule entries
             let entries = PDFService.extractScheduleData(from: pdfData)
+
+            print("🔵 Extracted \(entries.count) entries from PDF")
 
             guard !entries.isEmpty else {
                 importError = "Could not extract timetable data from PDF"
@@ -276,6 +289,10 @@ struct TimetableModuleView: View {
                     // Update metadata
                     existingTimetable.pdfData = pdfData
                     existingTimetable.markUpdated()
+
+                    // Validate and print report
+                    let report = TimetableValidator.validate(existingTimetable)
+                    TimetableValidator.printReport(report)
                 } else {
                     // Create new timetable
                     let timetableData = TimetableData(owner: user)
@@ -289,6 +306,10 @@ struct TimetableModuleView: View {
                     timetableData.markUpdated()
                     user.timetableData = timetableData
                     modelContext.insert(timetableData)
+
+                    // Validate and print report
+                    let report = TimetableValidator.validate(timetableData)
+                    TimetableValidator.printReport(report)
                 }
 
                 // Save context
@@ -296,6 +317,8 @@ struct TimetableModuleView: View {
 
                 // Update selected week
                 updateSelectedWeek()
+
+                print("✅ PDF data imported successfully!")
             }
 
             isImporting = false
