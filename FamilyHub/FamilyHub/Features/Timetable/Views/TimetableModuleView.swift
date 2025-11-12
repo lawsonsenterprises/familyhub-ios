@@ -20,6 +20,7 @@ struct TimetableModuleView: View {
     @State private var showPDFPicker = false
     @State private var isImporting = false
     @State private var importError: String?
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -68,6 +69,39 @@ struct TimetableModuleView: View {
             .background(Color.backgroundPrimary)
             .navigationTitle("Timetable")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                if user.timetableData?.hasSchedule == true {
+                    ToolbarItemGroup(placement: .navigationBarTrailing) {
+                        Menu {
+                            Button {
+                                showPDFPicker = true
+                            } label: {
+                                Label("Re-import PDF", systemImage: "arrow.clockwise.doc")
+                            }
+
+                            Button(role: .destructive) {
+                                showDeleteConfirmation = true
+                            } label: {
+                                Label("Delete Timetable", systemImage: "trash")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                        }
+                    }
+                }
+            }
+            .confirmationDialog(
+                "Delete Timetable",
+                isPresented: $showDeleteConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Delete", role: .destructive) {
+                    deleteTimetable()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This will permanently delete all timetable data. You can import a new PDF afterwards.")
+            }
             .sheet(isPresented: $showPDFPicker) {
                 PDFDocumentPicker(isPresented: $showPDFPicker) { url in
                     Task {
@@ -135,33 +169,33 @@ struct TimetableModuleView: View {
             }
 
             if user.isStudent {
-                VStack(spacing: Spacing.md) {
-                    Button {
-                        showPDFPicker = true
-                    } label: {
-                        Label("Import Timetable PDF", systemImage: "doc.badge.plus")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, Spacing.lg)
-                            .padding(.vertical, Spacing.sm)
-                            .background(Color.accentApp)
-                            .clipShape(Capsule())
-                    }
-                    .disabled(isImporting)
-
-                    Button {
-                        loadSampleData()
-                    } label: {
-                        Label("Load Sample Data", systemImage: "doc.text")
-                            .font(.subheadline)
-                            .foregroundColor(.accentApp)
-                            .padding(.horizontal, Spacing.md)
-                            .padding(.vertical, Spacing.xs)
-                            .background(Color.accentApp.opacity(0.1))
-                            .clipShape(Capsule())
-                    }
-                    .disabled(isImporting)
+                Button {
+                    showPDFPicker = true
+                } label: {
+                    Label("Import Timetable PDF", systemImage: "doc.badge.plus")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.vertical, Spacing.sm)
+                        .background(Color.accentApp)
+                        .clipShape(Capsule())
                 }
+                .disabled(isImporting)
+
+                #if DEBUG
+                // Development-only: Sample data for testing without PDF
+                Button {
+                    loadSampleData()
+                } label: {
+                    Label("Load Sample Data (Dev)", systemImage: "doc.text")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                        .padding(.horizontal, Spacing.sm)
+                        .padding(.vertical, Spacing.xxs)
+                }
+                .disabled(isImporting)
+                .padding(.top, Spacing.sm)
+                #endif
             }
 
             // Show error if import failed
@@ -203,6 +237,24 @@ struct TimetableModuleView: View {
             selectedWeek = calculatedWeek
             manualOverride = false
         }
+    }
+
+    private func deleteTimetable() {
+        guard let timetableData = user.timetableData else { return }
+
+        print("🔵 Deleting timetable data...")
+
+        // Remove all entries
+        timetableData.scheduleEntries.removeAll()
+
+        // Delete the timetable data object
+        modelContext.delete(timetableData)
+        user.timetableData = nil
+
+        // Save context
+        try? modelContext.save()
+
+        print("✅ Timetable deleted successfully")
     }
 
     private func loadSampleData() {
