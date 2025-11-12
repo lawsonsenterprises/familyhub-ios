@@ -24,11 +24,11 @@ extension Color {
 
     // MARK: - Week Identification
 
-    /// Week A indicator colour
-    static let weekA = Color.purple
+    /// Week 1 indicator colour
+    static let week1 = Color.purple
 
-    /// Week B indicator colour
-    static let weekB = Color.green
+    /// Week 2 indicator colour
+    static let week2 = Color.green
 
     // MARK: - Semantic Text Colours
 

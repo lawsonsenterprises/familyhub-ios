@@ -8,14 +8,14 @@
 
 import Foundation
 
-/// Service for calculating Week A/B and current period
+/// Service for calculating Week 1/2 and current period
 struct TimetableCalculator {
     /// Calculate current week based on start date
-    /// - Parameter startDate: Date when Week A started
-    /// - Returns: Current week type (A or B)
+    /// - Parameter startDate: Date when Week 1 started
+    /// - Returns: Current week type (1 or 2)
     static func currentWeek(startDate: Date) -> WeekType {
         let weeksSinceStart = weeksSince(startDate: startDate)
-        return weeksSinceStart % 2 == 0 ? .weekA : .weekB
+        return weeksSinceStart % 2 == 0 ? .week1 : .week2
     }
 
     /// Calculate number of weeks since start date

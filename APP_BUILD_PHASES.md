@@ -16,7 +16,7 @@
 
 ### Phase 2: Timetable Module
 - [ ] **Phase 2.1** - Timetable Views (Day, Week, Fortnight) ← **NEXT**
-- [ ] **Phase 2.2** - PDF Import & Week A/B Logic
+- [ ] **Phase 2.2** - PDF Import & Week 1/2 Logic
 
 ### Phase 3: Settings & Polish
 - [ ] **Phase 3.1** - Settings Implementation
@@ -153,7 +153,7 @@ a91adcb - docs: Remove Phase 1.2 handoff document
 - **HealthKit** - Phase 5 feature (fitness app prep)
 
 ### Scope
-- **In Scope:** Timetable tracking, Week A/B, multi-user, iCloud sync
+- **In Scope:** Timetable tracking, Week 1/2, multi-user, iCloud sync
 - **Out of Scope:** Backend, multi-family support, complex auth (until Phase 4)
 - **Future:** Sign in with Apple (Phase 4), HealthKit (Phase 5)
 
@@ -236,7 +236,7 @@ Section {
 
 **Focus:**
 - Empty state designs for timetable views
-- Week A/B navigation UI
+- Week 1/2 navigation UI
 - Day view (today's classes)
 - Week view (Monday-Friday)
 - Fortnight view (both weeks side-by-side)

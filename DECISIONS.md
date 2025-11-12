@@ -253,7 +253,7 @@ Current task: [What you're working on]
 
 **Next Focus:**
 - Empty state designs for timetable views
-- Week A/B navigation UI
+- Week 1/2 navigation UI
 - Day view (today's classes)
 - Week view (Monday-Friday)
 - Fortnight view (both weeks side-by-side)

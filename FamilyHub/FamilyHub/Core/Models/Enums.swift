@@ -14,14 +14,14 @@ enum UserRole: String, Codable {
     case parent
 }
 
-/// Week type for timetable rotation (Week A or Week B)
+/// Week type for timetable rotation (Week 1 or Week 2)
 enum WeekType: String, Codable, CaseIterable {
-    case weekA = "Week A"
-    case weekB = "Week B"
+    case week1 = "Week 1"
+    case week2 = "Week 2"
 
-    /// Toggle between Week A and Week B
+    /// Toggle between Week 1 and Week 2
     mutating func toggle() {
-        self = self == .weekA ? .weekB : .weekA
+        self = self == .week1 ? .week2 : .week1
     }
 }
 

@@ -201,7 +201,7 @@ After successful setup:
 
 3. **Phase 2: Implement Timetable Module**
    - PDF import functionality
-   - Week A/B views
+   - Week 1/2 views
    - Schedule entry creation
 
 ## Need Help?

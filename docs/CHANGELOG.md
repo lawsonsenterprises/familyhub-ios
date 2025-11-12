@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Planned for v1.0 (MVP)
 - Multi-user profile support
-- Week A/B timetable module
+- Week 1/2 timetable module
 - PDF import functionality
 - Three view modes (Day, Week, Fortnight)
 - Current period highlighting
@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [ ] Complete SwiftData model implementation
 - [ ] Implement timetable views (Day, Week, Fortnight)
 - [ ] PDF import functionality
-- [ ] Week A/B calculation logic
+- [ ] Week 1/2 calculation logic
 - [ ] Settings screen
 - [ ] Dashboard/Home screen
 
@@ -102,7 +102,7 @@ Examples:
 **v1.0.0** - First production release (MVP)
 - Core functionality: timetable tracking
 - Multi-user support
-- Week A/B rotation
+- Week 1/2 rotation
 - TestFlight distribution
 
 ---

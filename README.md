@@ -4,7 +4,7 @@
 
 ## Overview
 
-FamilyHub is a family-focused iOS app designed to help families stay organised. The first feature is a school timetable viewer for tracking rotating Week A/B schedules, with a modular architecture ready for future features like calendar integration, homework tracking, and activity management.
+FamilyHub is a family-focused iOS app designed to help families stay organised. The first feature is a school timetable viewer for tracking rotating Week 1/2 schedules, with a modular architecture ready for future features like calendar integration, homework tracking, and activity management.
 
 ### Primary Users
 - **Amelia** - Student (timetable tracking)
@@ -25,7 +25,7 @@ FamilyHub is a family-focused iOS app designed to help families stay organised. 
 - Quick profile switching
 
 ### Timetable Module
-- Week A/B rotating schedule support
+- Week 1/2 rotating schedule support
 - PDF timetable import
 - Three view modes: Day, Week, Fortnight
 - Current period highlighting
@@ -131,7 +131,7 @@ xcodebuild test -scheme FamilyHub -destination 'platform=iOS Simulator,name=iPho
 
 ### Version 1.0 (Current - MVP)
 - ✅ Multi-user support
-- ✅ Week A/B timetable module
+- ✅ Week 1/2 timetable module
 - ✅ PDF import
 - ✅ Three view modes (Day, Week, Fortnight)
 - ✅ Settings and configuration

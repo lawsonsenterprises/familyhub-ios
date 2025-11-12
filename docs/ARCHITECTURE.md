@@ -101,7 +101,7 @@ class DataService {
 ```
 
 #### TimetableCalculator
-Handles Week A/B calculation logic.
+Handles Week 1/2 calculation logic.
 
 ```swift
 class TimetableCalculator {
@@ -112,9 +112,9 @@ class TimetableCalculator {
 ```
 
 **Week Calculation Logic:**
-- Takes a reference start date (when Week A began)
+- Takes a reference start date (when Week 1 began)
 - Calculates weeks elapsed since start date
-- Even weeks = Week A, Odd weeks = Week B
+- Even weeks = Week 1, Odd weeks = Week 2
 - Handles date math correctly across years
 
 #### PDFService
@@ -219,8 +219,8 @@ extension Color {
     static let primaryApp = Color.blue      // Main accent
     static let secondaryApp = Color.cyan    // Secondary actions
     static let accentApp = Color.orange     // CTAs
-    static let weekA = Color.purple         // Week A indicator
-    static let weekB = Color.green          // Week B indicator
+    static let week1 = Color.purple         // Week 1 indicator
+    static let week2 = Color.green          // Week 2 indicator
 }
 ```
 

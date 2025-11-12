@@ -33,14 +33,14 @@ FamilyHub/
 
 #### Models (SwiftData)
 - âï¸ **User.swift** - Family member profiles
-- âï¸ **TimetableData.swift** - Timetable with Week A/B
+- âï¸ **TimetableData.swift** - Timetable with Week 1/2
 - âï¸ **ScheduleEntry.swift** - Individual periods
 - âï¸ **UserPreferences.swift** - User settings
 - âï¸ **Enums.swift** - UserRole, WeekType, DayOfWeek, ViewMode
 
 #### Services
 - âï¸ **DataService.swift** - SwiftData container & CRUD operations
-- âï¸ **TimetableCalculator.swift** - Week A/B calculation logic
+- âï¸ **TimetableCalculator.swift** - Week 1/2 calculation logic
 - âï¸ **PDFService.swift** - PDF import & thumbnail generation
 
 #### Extensions & Protocols
@@ -155,7 +155,7 @@ You need to manually create the Xcode project through Xcode GUI and link the exi
    - File picker integration
    - PDF display
    - Storage in TimetableData
-3. â **Week A/B Toggle**
+3. â **Week 1/2 Toggle**
    - Week selector UI
    - Automatic week calculation
    - Manual override
@@ -210,10 +210,10 @@ User 1âââ1 TimetableData 1âââ* ScheduleEntry
      1âââ1 UserPreferences
 ```
 
-### Week A/B Calculation
+### Week 1/2 Calculation
 ```swift
 // Based on weeks since start date
-weeksSinceStart % 2 == 0 ? .weekA : .weekB
+weeksSinceStart % 2 == 0 ? .week1 : .week2
 ```
 
 ---
@@ -224,8 +224,8 @@ weeksSinceStart % 2 == 0 ? .weekA : .weekB
 - **Primary:** System Blue
 - **Secondary:** Cyan
 - **Accent:** Orange
-- **Week A:** Purple
-- **Week B:** Green
+- **Week 1:** Purple
+- **Week 2:** Green
 - **Text:** Adaptive (primary, secondary, tertiary)
 
 ### Typography Scale

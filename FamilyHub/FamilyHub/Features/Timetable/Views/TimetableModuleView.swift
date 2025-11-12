@@ -27,7 +27,7 @@ struct TimetableModuleView: View {
                             .font(.sectionHeader)
                             .foregroundColor(.textPrimary)
 
-                        Text("Week A/B timetable views will appear here")
+                        Text("Week 1/2 timetable views will appear here")
                             .font(.body)
                             .foregroundColor(.textSecondary)
                             .multilineTextAlignment(.center)

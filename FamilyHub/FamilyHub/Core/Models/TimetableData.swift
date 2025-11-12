@@ -9,7 +9,7 @@
 import Foundation
 import SwiftData
 
-/// Represents a user's timetable data including Week A/B configuration
+/// Represents a user's timetable data including Week 1/2 configuration
 @Model
 final class TimetableData {
     /// Unique identifier
@@ -18,10 +18,10 @@ final class TimetableData {
     /// PDF data for the timetable (optional)
     var pdfData: Data?
 
-    /// Current week type (Week A or Week B)
+    /// Current week type (Week 1 or Week 2)
     var currentWeek: WeekType
 
-    /// Date when Week A started (reference point for calculation)
+    /// Date when Week 1 started (reference point for calculation)
     var weekStartDate: Date
 
     /// Last updated timestamp
@@ -40,7 +40,7 @@ final class TimetableData {
     /// - Parameter owner: The user who owns this timetable
     init(owner: User? = nil) {
         self.id = UUID()
-        self.currentWeek = .weekA
+        self.currentWeek = .week1
         self.weekStartDate = Date()
         self.lastUpdated = Date()
         self.manualOverride = false
@@ -69,7 +69,7 @@ extension TimetableData {
 
     /// Get schedule entries for a specific week and day
     /// - Parameters:
-    ///   - week: Week type (A or B)
+    ///   - week: Week type (1 or 2)
     ///   - day: Day of week
     /// - Returns: Array of schedule entries sorted by period
     func entries(for week: WeekType, on day: DayOfWeek) -> [ScheduleEntry] {
@@ -79,7 +79,7 @@ extension TimetableData {
     }
 
     /// Get all schedule entries for a specific week
-    /// - Parameter week: Week type (A or B)
+    /// - Parameter week: Week type (1 or 2)
     /// - Returns: Array of schedule entries sorted by day and period
     func entries(for week: WeekType) -> [ScheduleEntry] {
         scheduleEntries
