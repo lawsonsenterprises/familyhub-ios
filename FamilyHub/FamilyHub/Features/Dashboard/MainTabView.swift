@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct MainTabView: View {
     let user: User

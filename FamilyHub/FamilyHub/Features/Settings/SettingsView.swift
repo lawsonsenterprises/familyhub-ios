@@ -56,7 +56,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Profile")
                 }
-                .listRowBackground(Material.periodCard)
+                .listRowBackground(Color.backgroundTertiary)
 
                 // App settings
                 Section {
@@ -76,7 +76,7 @@ struct SettingsView: View {
                 } header: {
                     Text("App Settings")
                 }
-                .listRowBackground(Material.periodCard)
+                .listRowBackground(Color.backgroundTertiary)
 
                 // Family section
                 Section {
@@ -92,7 +92,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Family Members")
                 }
-                .listRowBackground(Material.periodCard)
+                .listRowBackground(Color.backgroundTertiary)
 
                 // About section
                 Section {
@@ -113,7 +113,7 @@ struct SettingsView: View {
                 } header: {
                     Text("About")
                 }
-                .listRowBackground(Material.periodCard)
+                .listRowBackground(Color.backgroundTertiary)
             }
             .scrollContentBackground(.hidden)
             .background(Color.backgroundSecondary)

@@ -16,15 +16,17 @@ struct ContentView: View {
     @State private var selectedUser: User?
 
     var body: some View {
-        Group {
+        let _ = print("📱 CONTENTVIEW body evaluated. selectedUser = \(String(describing: selectedUser?.name)), users.count = \(users.count)")
+
+        return Group {
             if users.isEmpty {
-                // First launch - create initial user
+                let _ = print("🟡 CONTENTVIEW - Showing FirstLaunchView (no users)")
                 FirstLaunchView()
             } else if let selectedUser {
-                // User selected - show main app
+                let _ = print("🟢 CONTENTVIEW - Showing MainTabView for: \(selectedUser.name)")
                 MainTabView(user: selectedUser)
             } else {
-                // Show user selection
+                let _ = print("🟠 CONTENTVIEW - Showing UserSelectionView (no user selected)")
                 UserSelectionView(selectedUser: $selectedUser)
             }
         }
