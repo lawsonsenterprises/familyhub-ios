@@ -69,14 +69,168 @@ struct PDFService {
         return thumbnail
     }
 
-    /// Extract schedule data from PDF (placeholder for future OCR implementation)
+    /// Extract schedule data from PDF using text extraction
     /// - Parameter pdfData: PDF data to parse
-    /// - Returns: Array of schedule entries (currently returns empty array)
-    /// - Note: Future enhancement - implement OCR to automatically parse timetable
-    static func extractScheduleData(from pdfData: Data) -> [ScheduleEntry]? {
-        // TODO: Implement OCR/parsing logic in future version
-        // For v1.0, users will manually enter schedule data
+    /// - Returns: Array of schedule entries extracted from the PDF
+    static func extractScheduleData(from pdfData: Data) -> [ScheduleEntry] {
+        guard let document = PDFDocument(data: pdfData) else {
+            return []
+        }
+
+        var entries: [ScheduleEntry] = []
+
+        // Extract text from all pages
+        for pageIndex in 0..<document.pageCount {
+            guard let page = document.page(at: pageIndex),
+                  let pageContent = page.string else {
+                continue
+            }
+
+            // Parse the page content
+            let pageEntries = parseTimetableText(pageContent)
+            entries.append(contentsOf: pageEntries)
+        }
+
+        return entries
+    }
+
+    /// Parse timetable text content to extract schedule entries
+    /// - Parameter text: Raw text content from PDF
+    /// - Returns: Array of schedule entries
+    private static func parseTimetableText(_ text: String) -> [ScheduleEntry] {
+        var entries: [ScheduleEntry] = []
+        let lines = text.components(separatedBy: .newlines)
+
+        var currentWeek: WeekType?
+        var currentDay: DayOfWeek?
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+
+            // Detect week headers (e.g., "Week 1", "Week 2")
+            if trimmed.contains("Week 1") {
+                currentWeek = .week1
+                continue
+            } else if trimmed.contains("Week 2") {
+                currentWeek = .week2
+                continue
+            }
+
+            // Detect day headers
+            if let day = detectDayOfWeek(from: trimmed) {
+                currentDay = day
+                continue
+            }
+
+            // Parse period entry lines
+            if let week = currentWeek,
+               let day = currentDay,
+               let entry = parsePeriodLine(trimmed, week: week, day: day) {
+                entries.append(entry)
+            }
+        }
+
+        return entries
+    }
+
+    /// Detect day of week from text line
+    /// - Parameter text: Text line to analyze
+    /// - Returns: Day of week if detected
+    private static func detectDayOfWeek(from text: String) -> DayOfWeek? {
+        let lowercased = text.lowercased()
+        if lowercased.contains("monday") || lowercased.starts(with: "mon") {
+            return .monday
+        } else if lowercased.contains("tuesday") || lowercased.starts(with: "tue") {
+            return .tuesday
+        } else if lowercased.contains("wednesday") || lowercased.starts(with: "wed") {
+            return .wednesday
+        } else if lowercased.contains("thursday") || lowercased.starts(with: "thu") {
+            return .thursday
+        } else if lowercased.contains("friday") || lowercased.starts(with: "fri") {
+            return .friday
+        }
         return nil
+    }
+
+    /// Parse a single period line to create a schedule entry
+    /// - Parameters:
+    ///   - line: Text line containing period information
+    ///   - week: Week type
+    ///   - day: Day of week
+    /// - Returns: Schedule entry if parsing successful
+    private static func parsePeriodLine(_ line: String, week: WeekType, day: DayOfWeek) -> ScheduleEntry? {
+        // Expected format variations:
+        // "Period 1  09:00-09:50  Mathematics  R12  KCO"
+        // "P1 Mathematics R12"
+        // "1. Maths - Room 12 - 9:00"
+
+        guard !line.isEmpty else { return nil }
+
+        // Try to extract period number
+        let periodPattern = #"(?:Period\s*|P)?(\d+)"#
+        guard let periodMatch = line.range(of: periodPattern, options: .regularExpression),
+              let periodNumber = Int(line[periodMatch].components(separatedBy: CharacterSet.decimalDigits.inverted).joined()) else {
+            return nil
+        }
+
+        // Extract time if present (format: HH:MM or HH:MM-HH:MM)
+        let timePattern = #"(\d{1,2}:\d{2})(?:-(\d{1,2}:\d{2}))?"#
+        var startTime: String?
+        var endTime: String?
+
+        if let timeMatch = line.range(of: timePattern, options: .regularExpression) {
+            let timeString = String(line[timeMatch])
+            let times = timeString.components(separatedBy: "-")
+            startTime = times.first
+            endTime = times.count > 1 ? times.last : nil
+        }
+
+        // Extract room (format: R12, Room 12, Rm12)
+        let roomPattern = #"(?:Room\s*|R|Rm)\s*(\w+)"#
+        var room = ""
+        if let roomMatch = line.range(of: roomPattern, options: [.regularExpression, .caseInsensitive]) {
+            let roomString = String(line[roomMatch])
+            room = roomString.components(separatedBy: CharacterSet.alphanumerics.inverted).joined()
+                .replacingOccurrences(of: "Room", with: "", options: .caseInsensitive)
+                .replacingOccurrences(of: "Rm", with: "", options: .caseInsensitive)
+                .replacingOccurrences(of: "R", with: "")
+        }
+
+        // Extract subject (the text between period and room, or period and time)
+        var subject = line
+        if let periodRange = subject.range(of: periodPattern, options: .regularExpression) {
+            subject = String(subject[periodRange.upperBound...])
+        }
+        if let timeRange = subject.range(of: timePattern, options: .regularExpression) {
+            subject = String(subject[..<timeRange.lowerBound])
+        }
+        if let roomRange = subject.range(of: roomPattern, options: [.regularExpression, .caseInsensitive]) {
+            subject = String(subject[..<roomRange.lowerBound])
+        }
+
+        subject = subject.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Skip if no valid subject found
+        guard !subject.isEmpty else { return nil }
+
+        // Extract teacher code (usually 3 capital letters at the end)
+        let teacherPattern = #"\b([A-Z]{3})\b"#
+        var teacher: String?
+        if let teacherMatch = subject.range(of: teacherPattern, options: .regularExpression) {
+            teacher = String(subject[teacherMatch])
+            subject = subject.replacingOccurrences(of: teacher!, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        return ScheduleEntry(
+            dayOfWeek: day,
+            period: periodNumber,
+            subject: subject,
+            room: room,
+            week: week,
+            teacher: teacher,
+            startTime: startTime,
+            endTime: endTime
+        )
     }
 }
 

@@ -7,13 +7,19 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct TimetableModuleView: View {
     let user: User
 
+    @Environment(\.modelContext) private var modelContext
+
     @State private var selectedWeek: WeekType = .week1
     @State private var viewMode: ViewMode = .week
     @State private var manualOverride: Bool = false
+    @State private var showPDFPicker = false
+    @State private var isImporting = false
+    @State private var importError: String?
 
     var body: some View {
         NavigationStack {
@@ -62,6 +68,36 @@ struct TimetableModuleView: View {
             .background(Color.backgroundPrimary)
             .navigationTitle("Timetable")
             .navigationBarTitleDisplayMode(.large)
+            .sheet(isPresented: $showPDFPicker) {
+                PDFDocumentPicker(isPresented: $showPDFPicker) { url in
+                    Task {
+                        await importPDF(from: url)
+                    }
+                }
+            }
+            .overlay {
+                if isImporting {
+                    ZStack {
+                        Color.black.opacity(0.3)
+                            .ignoresSafeArea()
+
+                        VStack(spacing: Spacing.md) {
+                            ProgressView()
+                                .scaleEffect(1.5)
+                                .tint(.primaryApp)
+
+                            Text("Importing Timetable...")
+                                .font(.headline)
+                                .foregroundColor(.textPrimary)
+                        }
+                        .padding(Spacing.xl)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(Color.backgroundSecondary)
+                        )
+                    }
+                }
+            }
             .onAppear {
                 updateSelectedWeek()
             }
@@ -100,7 +136,7 @@ struct TimetableModuleView: View {
 
             if user.isStudent {
                 Button {
-                    // Import PDF action (Phase 2.2)
+                    showPDFPicker = true
                 } label: {
                     Label("Import Timetable PDF", systemImage: "doc.badge.plus")
                         .font(.headline)
@@ -110,6 +146,15 @@ struct TimetableModuleView: View {
                         .background(Color.accentApp)
                         .clipShape(Capsule())
                 }
+                .disabled(isImporting)
+            }
+
+            // Show error if import failed
+            if let error = importError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .padding(.top, Spacing.sm)
             }
 
             Spacer()
@@ -142,6 +187,68 @@ struct TimetableModuleView: View {
         } else {
             selectedWeek = calculatedWeek
             manualOverride = false
+        }
+    }
+
+    private func importPDF(from url: URL) async {
+        isImporting = true
+        importError = nil
+
+        do {
+            // Import the PDF data
+            let pdfData = try await PDFService.importPDF(from: url)
+
+            // Extract schedule entries
+            let entries = PDFService.extractScheduleData(from: pdfData)
+
+            guard !entries.isEmpty else {
+                importError = "Could not extract timetable data from PDF"
+                isImporting = false
+                return
+            }
+
+            // Create or update timetable data
+            await MainActor.run {
+                if let existingTimetable = user.timetableData {
+                    // Clear existing entries
+                    existingTimetable.scheduleEntries.removeAll()
+
+                    // Add new entries
+                    for entry in entries {
+                        existingTimetable.scheduleEntries.append(entry)
+                    }
+
+                    // Update metadata
+                    existingTimetable.pdfData = pdfData
+                    existingTimetable.markUpdated()
+                } else {
+                    // Create new timetable
+                    let timetableData = TimetableData(owner: user)
+                    timetableData.pdfData = pdfData
+
+                    // Add entries
+                    for entry in entries {
+                        timetableData.scheduleEntries.append(entry)
+                    }
+
+                    timetableData.markUpdated()
+                    user.timetableData = timetableData
+                    modelContext.insert(timetableData)
+                }
+
+                // Save context
+                try? modelContext.save()
+
+                // Update selected week
+                updateSelectedWeek()
+            }
+
+            isImporting = false
+        } catch {
+            await MainActor.run {
+                importError = error.localizedDescription
+                isImporting = false
+            }
         }
     }
 }
