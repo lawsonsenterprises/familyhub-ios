@@ -26,7 +26,7 @@
 **Decision:** Emoji-prefixed console logs for navigation flow diagnosis
 **Rationale:** Easy to spot in console, helps debug binding/state issues
 **Chat:** Phase 1.1 - Build Fixes
-**Status:** ✅ Implemented (to be removed after testing)
+**Status:** ✅ Implemented and removed after testing complete
 
 ### 2025-11-12 | PDF Timetable Permissions (Option C)
 **Decision:** Any family member can import/manage any student's timetable
@@ -51,6 +51,30 @@
 **Rationale:** Learn HealthKit + auth in simpler context before big fitness app
 **Chat:** Phase 1.1 - Build Fixes
 **Status:** 📋 Phase 5 feature (after timetable complete)
+
+### 2025-11-12 | Switch User Implementation
+**Decision:** Pass selectedUser binding through view hierarchy (ContentView → MainTabView → SettingsView)
+**Rationale:** Clean, SwiftUI-native approach. Setting selectedUser = nil triggers return to UserSelectionView
+**Chat:** Phase 1.2 - Testing & Polish
+**Status:** ✅ Implemented and tested
+
+### 2025-11-12 | Test Data Strategy
+**Decision:** Automatically create three test users (Amelia, Rachel, Andy) on first launch
+**Rationale:** Immediate testing capability, proper family structure, students get TimetableData
+**Chat:** Phase 1.2 - Testing & Polish
+**Status:** ✅ Implemented in ContentView.onAppear
+
+### 2025-11-12 | Project Configuration
+**Decision:** iOS 17.0 deployment target, lowercase bundle ID (com.lawsonsenterprises.familyhub)
+**Rationale:** Match specification exactly, iOS 17.0 gives us latest SwiftData features with broad compatibility
+**Chat:** Phase 1.2 - Testing & Polish
+**Status:** ✅ Configured in project.pbxproj
+
+### 2025-11-12 | iCloud Setup
+**Decision:** Add FamilyHub.entitlements with CloudKit + iCloud key-value store
+**Rationale:** Required for SwiftData iCloud sync, matches automatic configuration in DataService
+**Chat:** Phase 1.2 - Testing & Polish
+**Status:** ✅ Entitlements file created
 
 ---
 
@@ -125,9 +149,9 @@
 
 ### Navigation Tap Issue
 **Question:** Why isn't user card tap triggering navigation to MainTabView?
-**Status:** 🔍 Investigating with debug logging
-**Next Step:** Run app, capture console output, diagnose binding flow
-**Chat:** Phase 1.1 - Build Fixes
+**Status:** ✅ RESOLVED - Button-based tap works perfectly
+**Solution:** Changed from .onTapGesture to Button wrapper with CardButtonStyle
+**Chat:** Phase 1.1 - Build Fixes, tested in Phase 1.2
 
 ### HealthKit Metrics
 **Question:** Which health metrics to display in Health tab?
@@ -141,8 +165,8 @@
 
 | Chat Name | Token Status at End | Key Decisions | Files Changed |
 |-----------|---------------------|---------------|---------------|
-| Phase 1.1 - Build Fixes | ~62% (118K/200K) | Button tap fix, Debug logging, Option C, Apple ID Path A | UserSelectionView, ContentView, SettingsView, MainTabView |
-| Phase 1.2 - Testing & Polish | TBD | TBD | TBD |
+| Phase 1.1 - Build Fixes | ~68% (136K/200K) | Button tap fix, Debug logging, Option C, Apple ID Path A | UserSelectionView, ContentView, SettingsView, MainTabView |
+| Phase 1.2 - Testing & Polish | ~34% (68K/200K) | Switch User binding, Auto test users, iOS 17.0 config, iCloud entitlements | ContentView, MainTabView, SettingsView, project.pbxproj, FamilyHub.entitlements, APP_BUILD_PHASES.md |
 
 ---
 
@@ -201,7 +225,9 @@ Current task: [What you're working on]
 
 ## Current Status
 
-### Phase 1.1 Progress
+### Phase 1 - COMPLETE ✅
+
+**Phase 1.1 - Build Fixes:**
 - ✅ Git repository initialized
 - ✅ All SwiftData models implemented
 - ✅ Core services (DataService, TimetableCalculator, PDFService)
@@ -209,24 +235,39 @@ Current task: [What you're working on]
 - ✅ Main tab navigation structure
 - ✅ Placeholder views (Dashboard, Timetable, Settings)
 - ✅ Xcode project created and building successfully
-- ✅ Fixed duplicate folder issues
-- ✅ Fixed Material/listRowBackground compatibility
-- ✅ Fixed import statements (SwiftData)
+- ✅ Fixed all build errors (20+ errors resolved)
 - ✅ Implemented Button-based tap with visual feedback
-- ✅ Added comprehensive debug logging
-- 🔍 **Current Issue:** Navigation from user selection to MainTabView not working (under investigation)
 
-### Next Immediate Tasks
-1. Run app in simulator with debug logging enabled
-2. Capture console output when tapping user card
-3. Diagnose where navigation flow breaks
-4. Fix the binding/state issue preventing navigation
-5. Remove debug logging once fixed
-6. Complete Phase 1.1 testing
-7. Commit all changes to git
+**Phase 1.2 - Testing & Polish:**
+- ✅ Switch User functionality implemented and tested
+- ✅ Automatic test user creation (Amelia, Rachel, Andy)
+- ✅ Navigation flow verified (user selection → tabs → switch user)
+- ✅ Light/dark mode verified
+- ✅ Empty states confirmed working
+- ✅ Animations polished and smooth
+- ✅ Debug logging removed
+- ✅ Project configured (iOS 17.0, bundle ID, iCloud entitlements)
+- ✅ All changes committed to git
+
+### Ready for Phase 2.1 - Timetable Views
+
+**Next Focus:**
+- Empty state designs for timetable views
+- Week A/B navigation UI
+- Day view (today's classes)
+- Week view (Monday-Friday)
+- Fortnight view (both weeks side-by-side)
+- Current period highlighting
+
+**Prerequisites Met:**
+- ✅ Phase 1 foundation complete
+- ✅ Switch User working
+- ✅ All debugging cleaned up
+- ✅ Git commits with clean state
+- ✅ Project properly configured
 
 ---
 
-**Last Updated:** 12 November 2025, 10:00
-**Current Phase:** 1.1 - Build Fixes & Testing
-**Token Usage:** ~62% (118K/200K used)
+**Last Updated:** 12 November 2025, 12:50 GMT
+**Current Phase:** Phase 1 Complete - Ready for Phase 2
+**Token Usage Phase 1:** ~204K total (68% + 34% across two chats)

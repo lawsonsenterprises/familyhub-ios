@@ -17,17 +17,12 @@ struct ContentView: View {
     @State private var hasCreatedInitialUsers = false
 
     var body: some View {
-        let _ = print("📱 CONTENTVIEW body evaluated. selectedUser = \(String(describing: selectedUser?.name)), users.count = \(users.count)")
-
-        return Group {
+        Group {
             if users.isEmpty {
-                let _ = print("🟡 CONTENTVIEW - Showing FirstLaunchView (no users)")
                 FirstLaunchView()
             } else if let selectedUser {
-                let _ = print("🟢 CONTENTVIEW - Showing MainTabView for: \(selectedUser.name)")
                 MainTabView(user: selectedUser, selectedUser: $selectedUser)
             } else {
-                let _ = print("🟠 CONTENTVIEW - Showing UserSelectionView (no user selected)")
                 UserSelectionView(selectedUser: $selectedUser)
             }
         }
@@ -68,9 +63,8 @@ struct ContentView: View {
 
         do {
             try modelContext.save()
-            print("✅ Created initial test users: Amelia, Rachel, Andy")
         } catch {
-            print("❌ Error creating initial users: \(error)")
+            print("Error creating initial users: \(error)")
         }
     }
 }

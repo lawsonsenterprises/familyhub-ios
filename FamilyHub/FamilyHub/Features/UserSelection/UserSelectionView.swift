@@ -18,9 +18,7 @@ struct UserSelectionView: View {
     @State private var showingAddUser = false
 
     var body: some View {
-        let _ = print("👥 USERSELECTIONVIEW body evaluated. users.count = \(users.count), selectedUser = \(String(describing: selectedUser?.name))")
-
-        return NavigationStack {
+        NavigationStack {
             ZStack {
                 // Background
                 Color.backgroundPrimary
@@ -36,9 +34,7 @@ struct UserSelectionView: View {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.md) {
                             ForEach(users) { user in
                                 Button {
-                                    print("🔵 BUTTON TAPPED - User: \(user.name)")
                                     selectUser(user)
-                                    print("🔵 After selectUser() called")
                                 } label: {
                                     UserCardView(user: user)
                                 }
@@ -99,12 +95,9 @@ struct UserSelectionView: View {
     // MARK: - Actions
 
     private func selectUser(_ user: User) {
-        print("🔵 selectUser() called for: \(user.name)")
-        print("🔵 selectedUser BEFORE: \(String(describing: selectedUser?.name))")
         HapticManager.medium()
         withAnimation(.easeOut(duration: AnimationDuration.standard)) {
             selectedUser = user
-            print("🔵 selectedUser AFTER: \(String(describing: selectedUser?.name))")
         }
     }
 }
