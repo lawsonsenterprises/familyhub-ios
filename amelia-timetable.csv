@@ -1,0 +1,71 @@
+Week,Day,Period,Subject,Teacher,Room
+1,Monday,TUT,AM Registration,KCO,Room 512
+1,Monday,1,English Language,BBR,Room 053
+1,Monday,2,History,ERE,Room 417
+1,Monday,3,PE,MRO,Room 7
+1,Monday,4,Computer Science,ALW,Room 247
+1,Monday,TUT,PM Registration,KCO,Room 512
+1,Monday,5,Mathematics,KDN,Room 113
+1,Tuesday,TUT,AM Registration,KCO,Room 512
+1,Tuesday,1,PSHE,KCO,Room 512
+1,Tuesday,2,Religious Education,STR,Room 166
+1,Tuesday,3,Mathematics,KDN,Room 113
+1,Tuesday,4,Science,DPE,Room 256
+1,Tuesday,TUT,PM Registration,KCO,Room 512
+1,Tuesday,5,English Language,BBR,Room 412
+1,Wednesday,TUT,AM Registration,KCO,Room 512
+1,Wednesday,1,Science,DPE,Room 256
+1,Wednesday,2,Religious Education,STR,Room 166
+1,Wednesday,3,Computer Science,NMO,Room 243
+1,Wednesday,4,French,AHE,Room 510
+1,Wednesday,TUT,PM Registration,KCO,Room 512
+1,Wednesday,5,English Language,BBR,Room 412
+1,Thursday,TUT,AM Registration,KCO,Room 512
+1,Thursday,1,Science,DPE,Room 256
+1,Thursday,2,History,ERE,Room 516
+1,Thursday,3,Dance,KMO,Room 100
+1,Thursday,4,Mathematics,KDN,Room 113
+1,Thursday,TUT,PM Registration,KCO,Room 512
+1,Thursday,5,French,NRU,Room 510
+1,Friday,TUT,AM Registration,KCO,Room 512
+1,Friday,1,Science,DPE,Room 256
+1,Friday,2,Mathematics,KDN,Room 113
+1,Friday,3,PE,MRO,Room 7
+1,Friday,4,Food,JRY,Room 054
+1,Friday,TUT,PM Registration,KCO,Room 512
+1,Friday,5,English Language,BBR,Room 412
+2,Monday,TUT,AM Registration,KCO,Room 512
+2,Monday,1,English Language,BBR,Room 412
+2,Monday,2,Science,DPE,Room 256
+2,Monday,3,PE,MRO,Room 7
+2,Monday,4,PSHE,KCO,Room 512
+2,Monday,TUT,PM Registration,KCO,Room 512
+2,Monday,5,Mathematics,KDN,Room 113
+2,Tuesday,TUT,AM Registration,KCO,Room 512
+2,Tuesday,1,English Language,BBR,Room 113
+2,Tuesday,2,Mathematics,KDN,Room 166
+2,Tuesday,3,Religious Education,STR,Room 166
+2,Tuesday,4,Geography,DTE,Room 045
+2,Tuesday,TUT,PM Registration,KCO,Room 512
+2,Tuesday,5,Computer Science,NMO,Room 243
+2,Wednesday,TUT,AM Registration,KCO,Room 512
+2,Wednesday,1,History,ERE,Room 044
+2,Wednesday,2,Geography,DTE,Room 045
+2,Wednesday,3,Dance,KMO,Room 100
+2,Wednesday,4,Arts Award,EBR,Room 065
+2,Wednesday,TUT,PM Registration,KCO,Room 512
+2,Wednesday,5,Science,DPE,Room 256
+2,Thursday,TUT,AM Registration,KCO,Room 512
+2,Thursday,1,Dance,KMO,Room 100
+2,Thursday,2,Mathematics,KDN,Room 113
+2,Thursday,3,Geography,DTE,Room 045
+2,Thursday,4,Science,DPE,Room 256
+2,Thursday,TUT,PM Registration,KCO,Room 512
+2,Thursday,5,English Language,BBR,Room 412
+2,Friday,TUT,AM Registration,KCO,Room 512
+2,Friday,1,French,AHE,Room 510
+2,Friday,2,Science,DPE,Room 256
+2,Friday,3,PE,MRO,Room 7
+2,Friday,4,Mathematics,KDN,Room 113
+2,Friday,TUT,PM Registration,KCO,Room 512
+2,Friday,5,English Language,BBR,Library

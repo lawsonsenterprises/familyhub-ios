@@ -114,11 +114,11 @@ struct CSVParser {
                 continue
             }
 
-            // Validate Period (can be string now: "AM Registration", "1"-"5", "PM Registration")
-            guard let period = parsePeriod(periodStr) else {
+            // Validate Period (can be string now: "TUT", "AM Registration", "1"-"5", "PM Registration")
+            guard var period = parsePeriod(periodStr) else {
                 errors.append(ParseError(
                     row: rowNumber,
-                    message: "Invalid period value '\(periodStr)'. Must be 'AM Registration', '1'-'5', or 'PM Registration'"
+                    message: "Invalid period value '\(periodStr)'. Must be 'TUT', 'AM Registration', '1'-'5', or 'PM Registration'"
                 ))
                 continue
             }
@@ -130,6 +130,18 @@ struct CSVParser {
                     message: "Subject is required (cannot be empty)"
                 ))
                 continue
+            }
+
+            // Handle TUT period - determine AM (0) or PM (6) based on subject
+            if periodStr.uppercased() == "TUT" {
+                if subject.uppercased().contains("AM") {
+                    period = 0  // AM Registration
+                } else if subject.uppercased().contains("PM") {
+                    period = 6  // PM Registration
+                } else {
+                    // Default to AM if not specified
+                    period = 0
+                }
             }
 
             // Teacher is optional (can be empty)
@@ -215,9 +227,17 @@ struct CSVParser {
     }
 
     /// Parse period value from string
-    /// - Parameter value: Period string ("AM Registration", "1"-"5", "PM Registration")
+    /// - Parameter value: Period string ("TUT", "AM Registration", "1"-"5", "PM Registration")
     /// - Returns: Period number if valid, nil otherwise
     private static func parsePeriod(_ value: String) -> Int? {
+        let normalized = value.trimmingCharacters(in: .whitespaces).uppercased()
+
+        // Handle "TUT" (Tutorial/Registration) - need to check subject field to determine AM/PM
+        // For now, we'll map TUT to 0, but this will be refined in the validation
+        if normalized == "TUT" {
+            return 0  // Will be determined by subject (AM/PM Registration)
+        }
+
         // Check for registration periods
         if value.lowercased().contains("am") && value.lowercased().contains("registration") {
             return 0  // AM Registration = Period 0
