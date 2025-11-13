@@ -40,9 +40,7 @@ struct TimetableValidator {
             if entry.room.isEmpty {
                 report.warnings.append("Entry missing room: \(entry.subject), Period \(entry.period)")
             }
-            if entry.startTime == nil {
-                report.warnings.append("Entry missing start time: \(entry.subject), Period \(entry.period)")
-            }
+            // Note: startTime is optional and not required (times are fixed per period)
         }
 
         // Check for duplicate entries

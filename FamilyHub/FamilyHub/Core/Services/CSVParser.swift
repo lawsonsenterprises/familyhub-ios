@@ -132,15 +132,22 @@ struct CSVParser {
                 continue
             }
 
-            // Handle TUT period - use row index within day to determine order
-            // This preserves the CSV order rather than forcing AM=0, PM=6
+            // Adjust period numbers to account for registration periods
+            // The CSV has: AM Reg (TUT), P1-4, PM Reg (TUT), P5
+            // We need: 0, 1, 2, 3, 4, 5, 6
             if periodStr.uppercased() == "TUT" {
                 // Count how many entries we have for this week/day combination so far
                 let existingForDay = validEntries.filter { $0.week == week && $0.dayOfWeek == day }.count
-
-                // Use the sequential position as the period number
-                // This will preserve: AM Reg (0), P1-P4, PM Reg (5), P5 (6)
                 period = existingForDay
+            } else if let numericPeriod = Int(periodStr), numericPeriod == 5 {
+                // Period 5 comes after PM Registration, so it should be period 6
+                // Check if we already have a PM Registration (period 5) for this day
+                let hasPMReg = validEntries.contains {
+                    $0.week == week && $0.dayOfWeek == day && $0.period == 5
+                }
+                if hasPMReg {
+                    period = 6  // Shift period 5 to period 6
+                }
             }
 
             // Teacher is optional (can be empty)
