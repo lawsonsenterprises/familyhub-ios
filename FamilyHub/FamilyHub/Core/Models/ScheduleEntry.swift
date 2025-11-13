@@ -97,4 +97,23 @@ extension ScheduleEntry {
         }
         return room
     }
+
+    /// Returns the period label for display
+    /// Maps internal period numbers to user-friendly labels:
+    /// - 0 → "Tutor" (AM Registration)
+    /// - 1-4 → "P1", "P2", "P3", "P4"
+    /// - 5 → "Tutor" (PM Registration)
+    /// - 6 → "P5"
+    var periodLabel: String {
+        switch period {
+        case 0: return "Tutor"
+        case 1: return "P1"
+        case 2: return "P2"
+        case 3: return "P3"
+        case 4: return "P4"
+        case 5: return "Tutor"
+        case 6: return "P5"
+        default: return "P\(period)"
+        }
+    }
 }

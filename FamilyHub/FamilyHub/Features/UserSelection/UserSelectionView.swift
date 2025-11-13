@@ -84,7 +84,7 @@ struct UserSelectionView: View {
             Label("Add Family Member", systemImage: "person.badge.plus")
                 .font(.headline)
                 .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, Spacing.lg)
                 .padding(.vertical, Spacing.sm)
                 .background(Color.accentApp)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))

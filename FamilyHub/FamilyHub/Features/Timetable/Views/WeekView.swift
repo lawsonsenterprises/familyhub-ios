@@ -138,8 +138,8 @@ struct CompactPeriodCard: View {
 
             Spacer()
 
-            // Period number
-            Text("P\(entry.period)")
+            // Period label
+            Text(entry.periodLabel)
                 .font(.caption2)
                 .fontWeight(.semibold)
                 .foregroundColor(.textTertiary)
