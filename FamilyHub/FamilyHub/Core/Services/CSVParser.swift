@@ -132,16 +132,15 @@ struct CSVParser {
                 continue
             }
 
-            // Handle TUT period - determine AM (0) or PM (6) based on subject
+            // Handle TUT period - use row index within day to determine order
+            // This preserves the CSV order rather than forcing AM=0, PM=6
             if periodStr.uppercased() == "TUT" {
-                if subject.uppercased().contains("AM") {
-                    period = 0  // AM Registration
-                } else if subject.uppercased().contains("PM") {
-                    period = 6  // PM Registration
-                } else {
-                    // Default to AM if not specified
-                    period = 0
-                }
+                // Count how many entries we have for this week/day combination so far
+                let existingForDay = validEntries.filter { $0.week == week && $0.dayOfWeek == day }.count
+
+                // Use the sequential position as the period number
+                // This will preserve: AM Reg (0), P1-P4, PM Reg (5), P5 (6)
+                period = existingForDay
             }
 
             // Teacher is optional (can be empty)
