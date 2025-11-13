@@ -79,7 +79,74 @@
 ---
 
 ## Phase 2 Decisions
-(To be filled in Phase 2.1/2.2 chats)
+
+### 2025-11-12 | Week Terminology Change: A/B → 1/2
+**Decision:** Change all references from "Week A/B" to "Week 1/2" throughout codebase and documentation
+**Rationale:** More intuitive for users (especially students), clearer numbering system, avoids confusion with letter grades
+**Impact:**
+- Updated all documentation files:
+  - FamilyHub-Project-Specification.md (13 references updated)
+  - Claude-Code-Setup-Instructions.md
+  - FamilyHub-Project-Custom-Instructions.md
+  - FamilyHub-Master-Documentation-Index.md
+- Code already implemented with Week 1/2 terminology
+- UI displays "Week 1" and "Week 2" labels
+- Enum values: `.week1` and `.week2` (not `.weekA`/`.weekB`)
+- Color constants: `week1` and `week2` (not `weekA`/`weekB`)
+**Chat:** Phase 2.2 - PDF Import & Week 1/2 Logic
+**Status:** ✅ Complete
+
+### 2025-11-12 | Phase 2.2 Scope Change: PDF OCR → Multi-Import Strategy
+**Decision:** Abandon PDF OCR parsing, implement CSV + Manual Entry + Google Sheets import
+**Rationale:**
+- PDF is scanned image (not text), OCR unreliable and fragile
+- Format changes between terms would break parsing
+- Manual/CSV/Sheets import more robust and maintainable
+- Advanced manual entry features reusable in future fitness app
+**Implementation:**
+- CSV file import with validation and preview
+- Google Sheets OAuth import with authentication persistence
+- Full manual entry system with Level 3 power features
+- Reference databases for Subject/Teacher/Room with autocomplete
+- Bulk operations (copy day/week, templates)
+- Conflict detection (same teacher/room/time)
+- Full undo/redo tree with branching
+**Timeline:** 4-5 weeks (was 1 week for PDF parsing)
+**Impact:** Phase 2.2 split into sub-phases (2.2a-d)
+**Chat:** Phase 2.2 - Scope Planning
+**Status:** ✅ Approved - ready for implementation
+
+### 2025-11-12 | Data Model Extensions for Import System
+**Decision:** Add Subject, Teacher, Room reference data models with optional relationships
+**Rationale:** Support autocomplete, conflict detection, and data reuse without breaking existing string-based imports
+**Implementation:**
+- Subject model (name, shortCode, colour, icon)
+- Teacher model (code, fullName, email)
+- Room model (number, building, floor, capacity)
+- ScheduleEntry updated: period now String (was Int), optional relationships to reference models
+- String fields always populated (subjectName, teacherCode, roomNumber) for backwards compatibility
+**Impact:** Enables advanced features while maintaining import simplicity
+**Status:** ✅ Approved
+
+### 2025-11-12 | Import Strategy: Replace with Confirmation
+**Decision:** All imports (CSV, Google Sheets) replace existing timetable data after user confirmation
+**Rationale:** Simplest mental model, prevents data corruption from partial merges
+**User Flow:** Import → Preview → Confirm → Replace all entries
+**Manual Entry:** Can edit/add/delete individual entries after import
+**Status:** ✅ Approved
+
+### 2025-11-12 | Reference Data Auto-Creation
+**Decision:** Auto-create Subject/Teacher/Room entries on first import if they don't exist
+**Rationale:** Reduces friction, user can organize later
+**Cascade Delete:** Warn user if deleting reference data used in schedule entries
+**Status:** ✅ Approved
+
+### 2025-11-12 | CSV Format Specification
+**Decision:** Use simple CSV format: Week,Day,Period,Subject,Teacher,Room
+**Period Values:** "AM Registration", "1", "2", "3", "4", "5", "PM Registration"
+**Validation:** Warn on invalid data but import what's valid
+**Delimiter:** Comma (,) - standard CSV
+**Status:** ✅ Approved
 
 ## Phase 3 Decisions
 (To be filled in Phase 3 chat)

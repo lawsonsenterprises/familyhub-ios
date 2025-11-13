@@ -134,85 +134,136 @@ Phase 2.1 foundation is complete. All views are working with sample data. Now re
 
 ---
 
-## Phase 2.2 - PDF Import & Week 1/2 Logic ⚠️ IN PROGRESS
+## Phase 2.2 - Data Import & Manual Entry ⚠️ IN PROGRESS
 
-### Status: Troubleshooting PDF Parser (12 Nov 2025)
+### Status: In Progress (12 Nov 2025)
+
+### Overview
+Phase 2.2 implements multiple timetable data import methods and comprehensive manual entry capabilities. This phase was redesigned from PDF OCR (unreliable for scanned images) to robust multi-source import system.
+
+### Phase 2.2a - CSV File Import (Week 1)
+
+**Tasks:**
+- [ ] Create CSVParser service to parse standard CSV format
+- [ ] Implement file picker for CSV selection
+- [ ] Build ImportPreviewView to show data before commit
+- [ ] Add validation for Week/Day/Period values
+- [ ] Handle malformed CSV gracefully (warn, import valid rows)
+- [ ] Create ImportResultView showing success/errors
+- [ ] Test with Amelia's timetable CSV
+- [ ] Update existing import button to offer CSV option
+
+**CSV Format:**
+```csv
+Week,Day,Period,Subject,Teacher,Room
+1,Monday,AM Registration,KCO,,Room 512
+1,Monday,1,English Lang,BBR,Room 053
+1,Monday,2,History,ERE,Room 417
+```
+
+**Validation Rules:**
+- Week: Must be "1" or "2"
+- Day: Must be Monday/Tuesday/Wednesday/Thursday/Friday
+- Period: Must be "AM Registration", "1"-"5", or "PM Registration"
+- Subject: Required (non-empty)
+- Teacher: Optional (can be blank)
+- Room: Required (non-empty)
+
+### Phase 2.2b - Manual Entry Foundation (Week 2)
+
+**Tasks:**
+- [ ] Implement PeriodEditorView (add/edit form)
+- [ ] Create Subject/Teacher/Room data models
+- [ ] Build ReferenceDataManager service
+- [ ] Add CRUD operations for schedule entries
+- [ ] Implement recent combinations cache (last 10)
+- [ ] Build RecentCombinationsView for quick selection
+- [ ] Add basic undo/redo (last 20 actions)
+- [ ] Test creating full day manually
+
+**Data Models:**
+- Subject: name, shortCode, colourHex, icon, lastUsed
+- Teacher: code, fullName, email, lastUsed
+- Room: number, building, floor, capacity, lastUsed
+- Updated ScheduleEntry: period now String, add optional relationships
+
+### Phase 2.2c - Manual Entry Advanced (Week 3)
+
+**Tasks:**
+- [ ] Build ReferenceDataListView (manage subjects/teachers/rooms)
+- [ ] Implement autocomplete for all reference fields
+- [ ] Create DuplicatePeriodView (copy to other day/week)
+- [ ] Build CopyDayView (copy entire day)
+- [ ] Build CopyWeekView (copy entire week to other week)
+- [ ] Implement ConflictDetector service (same teacher/room/time)
+- [ ] Add ConflictWarningView for detected conflicts
+- [ ] Build BulkEditView (change all occurrences)
+- [ ] Implement full undo/redo tree with branching
+- [ ] Add TemplateManager for saving/loading week templates
+- [ ] Test all power features thoroughly
+
+**Power Features:**
+- Duplicate single period to another day/week
+- Copy entire day to another day
+- Copy Week 1 to Week 2 (or vice versa)
+- Templates: "Save Week 1 as template", "Load from template"
+- Bulk edit: Change all "Room 412" to "Library"
+- Conflict detection: Warn if same teacher has two classes at once
+- Full undo/redo with branching (not just linear)
+
+### Phase 2.2d - Google Sheets Import (Week 4)
+
+**Tasks:**
+- [ ] Set up Google Cloud Project and OAuth credentials
+- [ ] Implement GoogleAuthService with OAuth 2.0 flow
+- [ ] Add GoogleSheetsService for API calls
+- [ ] Build GoogleSignInView
+- [ ] Create SheetSelectorView (list user's sheets)
+- [ ] Implement RangeSelectorView (optional, default A:F)
+- [ ] Parse sheet data using same CSV format
+- [ ] Store auth token in Keychain
+- [ ] Handle token refresh
+- [ ] Add "Disconnect Google" in Settings
+- [ ] Test with real Google Sheet
+
+**Google Sheets Requirements:**
+- OAuth 2.0 with Google Sign-In
+- Sheets API v4 access
+- Same CSV format as file import
+- Authentication persistence in Keychain
+- Online-only (show error if offline)
+- Default: first sheet, columns A-F
+- Optional: sheet selection UI
+
+### Phase 2.2e - Testing & Polish (Week 5)
+
+**Tasks:**
+- [ ] Comprehensive testing of CSV import with various formats
+- [ ] Test manual entry workflow (create full week from scratch)
+- [ ] Test Google Sheets import end-to-end
+- [ ] Test bulk operations (copy day, copy week)
+- [ ] Verify conflict detection working
+- [ ] Test undo/redo for all operations
+- [ ] Edge case testing (malformed CSV, empty fields)
+- [ ] Performance testing (large timetables)
+- [ ] User acceptance testing with Amelia
+- [ ] Update TESTING_GUIDE.md with new scenarios
+- [ ] Remove debug logging
 
 ### Completed Tasks
-- [x] Implement PDFService.swift for PDF processing
-- [x] Add Apple Vision OCR integration (VNRecognizeTextRequest)
-- [x] Create PDFDocumentPicker for file selection
-- [x] Implement landscape PDF parser with column-based detection
-- [x] Add X-position clustering for column detection
-- [x] Implement sequential triplet parser (Subject/Teacher/Room groups)
-- [x] Add Delete Timetable functionality
-- [x] Add Re-import PDF menu option
-- [x] Extensive debug logging for OCR and parsing
+- [x] Phase 2.1 - All timetable views (Day/Week/Fortnight)
+- [x] Import button in TimetableModuleView
+- [x] Delete timetable option (3-dot menu)
+- [x] Week 1/2 terminology updated throughout
 
-### Current Status: Parser Tuning
-
-**What's Working:**
-✅ **PDF file picker** - Successfully opens and selects PDFs
-✅ **OCR text extraction** - Apple Vision detecting 128 text items with positions
-✅ **Column detection** - Successfully identifying 9 of 10 day columns using X-position clustering
-✅ **Column assignment** - Correctly assigning Week 1/2 and day names to columns
-
-**Current Issue:**
-⚠️ **Y-span threshold too strict** - Sequential triplet parser rejecting all valid entries
-
-**The Problem:**
-- Parser looks for groups of 3 items (Subject, Teacher, Room) within 0.025 Y-span
-- Actual OCR data shows items spread 0.031-0.04 apart vertically
-- Example from Monday Week 1:
-  - 'Room 053' at y=0.519
-  - 'History' at y=0.501
-  - 'ERE' at y=0.488
-  - Y-span = 0.031 > 0.025 threshold → rejected
-
-**The Fix:**
-- **File:** `PDFService.swift` line 301
-- **Change:** Increase Y-span threshold from `0.025` to `0.035` or `0.04`
-- **Impact:** One-line change, should unlock extraction of ~70-80 entries
-
-### Implementation Details
-
-**PDF Layout (Landscape):**
-- **Columns:** 10 day columns (Week 1 Mon-Fri, Week 2 Mon-Fri)
-- **Rows:** 7-8 periods vertically
-- **Cell Content:** 3 items per cell (Subject, Teacher code, Room number)
-
-**Parser Strategy:**
-1. **OCR Extraction:** Use Apple Vision to extract all text with bounding boxes
-2. **Filter Noise:** Remove title area and period labels (X > 0.10 threshold)
-3. **Cluster Columns:** Group items by X position (tolerance 0.03)
-4. **Assign Days:** Map clusters to expected day order (1Mon, 1Tue, ... 2Fri)
-5. **Sequential Parsing:** For each column, slide through items in groups of 3
-6. **Pattern Matching:** Identify Room (`^Room\s+\d+`), Teacher (`^[A-Z]{3,4}`), Subject (remaining)
-7. **Create Entries:** Build ScheduleEntry objects for valid triplets
-
-**Challenges Encountered:**
-- OCR mangling day headers into garbled text
-- Portrait/landscape layout confusion (resolved)
-- Filter threshold tuning (multiple iterations)
-- Y-span threshold too strict (current blocker)
-- Missing Week 2 Friday column (9 of 10 detected)
-
-### Next Steps
-1. [ ] Fix Y-span threshold (0.025 → 0.035/0.04)
-2. [ ] Test full import with real PDF
-3. [ ] Verify ~70-80 entries extracted
-4. [ ] Investigate missing Week 2 Friday column
-5. [ ] Handle edge cases (Registration, missing teacher codes)
-6. [ ] Remove debug logging for production
-7. [ ] Complete Phase 2.2 testing per TESTING_GUIDE.md
-
-### User Feedback Notes
-- PDF is from scanned paper timetable (only available format)
-- Must work with existing PDF (no alternative data sources)
-- User has expressed urgency to complete Phase 2.2
-
-### Ready for Phase 2.3 (Once Complete)
-Once PDF import is working and extracting all entries correctly, Phase 2.2 will be complete and app will be ready for user acceptance testing.
+### Ready for Phase 3
+Once Phase 2.2 is complete, app will have:
+- Multiple robust import methods
+- Full manual timetable creation
+- Advanced editing capabilities
+- Conflict detection
+- Template system
+- Ready for production use
 
 ---
 
