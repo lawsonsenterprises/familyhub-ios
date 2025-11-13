@@ -1,0 +1,71 @@
+Week,Day,Period,Subject,Teacher,Room
+1,Monday,AM Registration,Registration,KCO,512
+1,Monday,1,English Language,BBR,053
+1,Monday,2,History,ERE,417
+1,Monday,3,Design & Technology,HAN,209
+1,Monday,4,Maths,SMT,112
+1,Monday,5,Science - Chemistry,RSC,107
+1,Monday,PM Registration,Registration,KCO,512
+1,Tuesday,AM Registration,Registration,KCO,512
+1,Tuesday,1,Maths,SMT,112
+1,Tuesday,2,PE,GYM,Sports Hall
+1,Tuesday,3,English Literature,BBR,053
+1,Tuesday,4,Geography,MAP,318
+1,Tuesday,5,French,FRN,205
+1,Tuesday,PM Registration,Registration,KCO,512
+1,Wednesday,AM Registration,Registration,KCO,512
+1,Wednesday,1,Science - Physics,PHY,Lab 2
+1,Wednesday,2,Maths,SMT,112
+1,Wednesday,3,Music,MUS,Music Room
+1,Wednesday,4,English Language,BBR,053
+1,Wednesday,5,History,ERE,417
+1,Wednesday,PM Registration,Registration,KCO,512
+1,Thursday,AM Registration,Registration,KCO,512
+1,Thursday,1,French,FRN,205
+1,Thursday,2,Science - Biology,BIO,Lab 1
+1,Thursday,3,Geography,MAP,318
+1,Thursday,4,PE,GYM,Sports Hall
+1,Thursday,5,Design & Technology,HAN,209
+1,Thursday,PM Registration,Registration,KCO,512
+1,Friday,AM Registration,Registration,KCO,512
+1,Friday,1,English Literature,BBR,053
+1,Friday,2,Maths,SMT,112
+1,Friday,3,Science - Chemistry,RSC,107
+1,Friday,4,French,FRN,205
+1,Friday,5,Art,ART,Art Studio
+1,Friday,PM Registration,Registration,KCO,512
+2,Monday,AM Registration,Registration,KCO,512
+2,Monday,1,Maths,SMT,112
+2,Monday,2,English Literature,BBR,053
+2,Monday,3,Science - Physics,PHY,Lab 2
+2,Monday,4,Geography,MAP,318
+2,Monday,5,Music,MUS,Music Room
+2,Monday,PM Registration,Registration,KCO,512
+2,Tuesday,AM Registration,Registration,KCO,512
+2,Tuesday,1,French,FRN,205
+2,Tuesday,2,PE,GYM,Sports Hall
+2,Tuesday,3,Maths,SMT,112
+2,Tuesday,4,Design & Technology,HAN,209
+2,Tuesday,5,English Language,BBR,053
+2,Tuesday,PM Registration,Registration,KCO,512
+2,Wednesday,AM Registration,Registration,KCO,512
+2,Wednesday,1,Science - Biology,BIO,Lab 1
+2,Wednesday,2,History,ERE,417
+2,Wednesday,3,Art,ART,Art Studio
+2,Wednesday,4,Maths,SMT,112
+2,Wednesday,5,Geography,MAP,318
+2,Wednesday,PM Registration,Registration,KCO,512
+2,Thursday,AM Registration,Registration,KCO,512
+2,Thursday,1,English Language,BBR,053
+2,Thursday,2,Science - Chemistry,RSC,107
+2,Thursday,3,French,FRN,205
+2,Thursday,4,PE,GYM,Sports Hall
+2,Thursday,5,History,ERE,417
+2,Thursday,PM Registration,Registration,KCO,512
+2,Friday,AM Registration,Registration,KCO,512
+2,Friday,1,Maths,SMT,112
+2,Friday,2,English Literature,BBR,053
+2,Friday,3,Design & Technology,HAN,209
+2,Friday,4,Science - Physics,PHY,Lab 2
+2,Friday,5,Music,MUS,Music Room
+2,Friday,PM Registration,Registration,KCO,512

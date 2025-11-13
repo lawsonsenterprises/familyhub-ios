@@ -20,6 +20,9 @@ struct TimetableModuleView: View {
     @State private var isImporting = false
     @State private var importError: String?
     @State private var showDeleteConfirmation = false
+    @State private var showCSVPicker = false
+    @State private var parseResult: CSVParser.ParseResult?
+    @State private var showImportPreview = false
 
     var body: some View {
         NavigationStack {
@@ -95,6 +98,27 @@ struct TimetableModuleView: View {
             } message: {
                 Text("This will permanently delete all timetable data. You can import a new timetable afterwards.")
             }
+            .sheet(isPresented: $showCSVPicker) {
+                CSVDocumentPicker(isPresented: $showCSVPicker) { url in
+                    Task {
+                        await importCSV(from: url)
+                    }
+                }
+            }
+            .sheet(isPresented: $showImportPreview) {
+                if let result = parseResult {
+                    CSVImportPreviewView(
+                        parseResult: result,
+                        onConfirm: {
+                            confirmImport()
+                        },
+                        onCancel: {
+                            showImportPreview = false
+                            parseResult = nil
+                        }
+                    )
+                }
+            }
             .overlay {
                 if isImporting {
                     ZStack {
@@ -155,7 +179,18 @@ struct TimetableModuleView: View {
             }
 
             if user.isStudent {
-                // TODO: Phase 2.2a - CSV import button will be added here
+                Button {
+                    showCSVPicker = true
+                } label: {
+                    Label("Import CSV File", systemImage: "doc.badge.plus")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.vertical, Spacing.sm)
+                        .background(Color.accentApp)
+                        .clipShape(Capsule())
+                }
+                .disabled(isImporting)
 
                 #if DEBUG
                 // Development-only: Sample data for testing without PDF
@@ -283,7 +318,86 @@ struct TimetableModuleView: View {
         isImporting = false
     }
 
-    // TODO: Phase 2.2a - CSV import method will be added here
+    // MARK: - CSV Import
+
+    private func importCSV(from url: URL) async {
+        isImporting = true
+        importError = nil
+
+        do {
+            // Import CSV file
+            let csvContent = try await FileImportService.importCSV(from: url)
+
+            // Parse CSV content
+            let result = CSVParser.parse(csvContent)
+
+            await MainActor.run {
+                parseResult = result
+                isImporting = false
+
+                // Show preview
+                showImportPreview = true
+            }
+        } catch {
+            await MainActor.run {
+                importError = error.localizedDescription
+                isImporting = false
+            }
+        }
+    }
+
+    private func confirmImport() {
+        guard let result = parseResult else { return }
+
+        // Import the valid entries
+        let entries = result.validEntries
+
+        print("🔵 Importing \(entries.count) valid entries...")
+
+        if let existingTimetable = user.timetableData {
+            // Clear existing entries
+            existingTimetable.scheduleEntries.removeAll()
+
+            // Add new entries
+            for entry in entries {
+                existingTimetable.scheduleEntries.append(entry)
+            }
+
+            existingTimetable.markUpdated()
+
+            // Validate and print report
+            let validationReport = TimetableValidator.validate(existingTimetable)
+            TimetableValidator.printReport(validationReport)
+        } else {
+            // Create new timetable
+            let timetableData = TimetableData(owner: user)
+
+            // Add entries
+            for entry in entries {
+                timetableData.scheduleEntries.append(entry)
+            }
+
+            timetableData.markUpdated()
+            user.timetableData = timetableData
+            modelContext.insert(timetableData)
+
+            // Validate and print report
+            let validationReport = TimetableValidator.validate(timetableData)
+            TimetableValidator.printReport(validationReport)
+        }
+
+        // Save context
+        try? modelContext.save()
+
+        // Update selected week
+        updateSelectedWeek()
+
+        // Close preview
+        showImportPreview = false
+        parseResult = nil
+
+        print("✅ CSV data imported successfully!")
+    }
 }
 
 #Preview {
