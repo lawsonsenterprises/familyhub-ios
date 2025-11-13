@@ -216,39 +216,42 @@ struct TodayPeriodRow: View {
     let isNext: Bool
 
     var body: some View {
-        HStack(spacing: Spacing.xs) {
-            // Time
-            if let times = TimetableCalculator.times(for: entry.period) {
-                Text(times.start)
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .foregroundColor(isCurrent ? .primaryApp : .textTertiary)
-                    .frame(width: 38, alignment: .leading)
-            }
-
-            // Period label
+        HStack(spacing: Spacing.sm) {
+            // Period label with badge
             Text(entry.periodLabel)
                 .font(.caption2)
                 .fontWeight(.semibold)
                 .foregroundColor(isCurrent ? .white : .textSecondary)
-                .frame(minWidth: 35, alignment: .leading)
+                .frame(minWidth: 40, alignment: .center)
                 .padding(.horizontal, Spacing.xxs)
-                .padding(.vertical, 2)
+                .padding(.vertical, 4)
                 .background(isCurrent ? Color.primaryApp : Color.backgroundTertiary)
-                .cornerRadius(4)
+                .cornerRadius(6)
 
-            // Subject and room
-            VStack(alignment: .leading, spacing: 1) {
+            // Subject, room, and time
+            VStack(alignment: .leading, spacing: 2) {
                 Text(entry.subject)
-                    .font(.caption)
-                    .fontWeight(isCurrent ? .semibold : .regular)
+                    .font(.subheadline)
+                    .fontWeight(isCurrent ? .semibold : .medium)
                     .foregroundColor(isCurrent ? .primaryApp : .textPrimary)
                     .lineLimit(1)
 
-                if !entry.room.isEmpty {
-                    Text("Room \(entry.room)")
-                        .font(.caption2)
-                        .foregroundColor(.textTertiary)
+                HStack(spacing: Spacing.xs) {
+                    if !entry.room.isEmpty {
+                        Text("Room \(entry.room)")
+                            .font(.caption2)
+                            .foregroundColor(.textSecondary)
+                    }
+
+                    // Time range
+                    if let times = TimetableCalculator.times(for: entry.period) {
+                        Text("•")
+                            .font(.caption2)
+                            .foregroundColor(.textTertiary)
+                        Text("\(times.start)-\(times.end)")
+                            .font(.caption2)
+                            .foregroundColor(.textTertiary)
+                    }
                 }
             }
 
@@ -259,26 +262,26 @@ struct TodayPeriodRow: View {
                 HStack(spacing: Spacing.xxs) {
                     Circle()
                         .fill(Color.primaryApp)
-                        .frame(width: 5, height: 5)
+                        .frame(width: 6, height: 6)
 
                     Text("Now")
-                        .font(.caption2)
+                        .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(.primaryApp)
                 }
             } else if isNext {
                 Text("Next")
-                    .font(.caption2)
+                    .font(.caption)
                     .fontWeight(.medium)
                     .foregroundColor(.textSecondary)
             }
         }
-        .padding(.horizontal, Spacing.xs)
-        .padding(.vertical, Spacing.xxs)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.sm)
         .background(
-            isCurrent ? Color.primaryApp.opacity(0.06) : Color.clear
+            isCurrent ? Color.primaryApp.opacity(0.08) : Color.backgroundSecondary.opacity(0.3)
         )
-        .cornerRadius(6)
+        .cornerRadius(8)
     }
 }
 
@@ -322,51 +325,50 @@ struct BreakRow: View {
     let isCurrent: Bool
 
     var body: some View {
-        HStack(spacing: Spacing.xs) {
-            // Time
-            Text(type.times.start)
-                .font(.caption2)
-                .fontWeight(.medium)
-                .foregroundColor(isCurrent ? .primaryApp : .textTertiary)
-                .frame(width: 38, alignment: .leading)
+        HStack(spacing: Spacing.sm) {
+            // Icon in badge
+            Image(systemName: type.icon)
+                .font(.caption)
+                .foregroundColor(isCurrent ? .orange : .textSecondary)
+                .frame(minWidth: 40, alignment: .center)
+                .padding(.vertical, 4)
+                .background(isCurrent ? Color.orange.opacity(0.15) : Color.backgroundTertiary)
+                .cornerRadius(6)
 
-            // Icon and label
-            HStack(spacing: Spacing.xxs) {
-                Image(systemName: type.icon)
-                    .font(.caption2)
-                    .foregroundColor(isCurrent ? .orange : .textSecondary)
-
+            // Title and time
+            VStack(alignment: .leading, spacing: 2) {
                 Text(type.title)
-                    .font(.caption2)
+                    .font(.subheadline)
                     .fontWeight(isCurrent ? .semibold : .medium)
                     .foregroundColor(isCurrent ? .orange : .textSecondary)
 
-                Text("(\(type.duration))")
+                Text("\(type.times.start)-\(type.times.end) (\(type.duration))")
                     .font(.caption2)
                     .foregroundColor(.textTertiary)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Spacer()
 
             // Current indicator
             if isCurrent {
                 HStack(spacing: Spacing.xxs) {
                     Circle()
                         .fill(Color.orange)
-                        .frame(width: 5, height: 5)
+                        .frame(width: 6, height: 6)
 
                     Text("Now")
-                        .font(.caption2)
+                        .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(.orange)
                 }
             }
         }
-        .padding(.horizontal, Spacing.xs)
-        .padding(.vertical, Spacing.xxs)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.sm)
         .background(
-            isCurrent ? Color.orange.opacity(0.06) : Color.backgroundSecondary.opacity(0.5)
+            isCurrent ? Color.orange.opacity(0.08) : Color.backgroundSecondary.opacity(0.2)
         )
-        .cornerRadius(6)
+        .cornerRadius(8)
     }
 }
 

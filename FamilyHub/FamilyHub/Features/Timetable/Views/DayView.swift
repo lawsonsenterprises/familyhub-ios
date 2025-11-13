@@ -17,28 +17,39 @@ struct DayView: View {
     @State private var currentPeriod: ScheduleEntry?
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: Spacing.md) {
-                // Date header
-                dateHeader
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: Spacing.md) {
+                    // Date header
+                    dateHeader
 
-                // Schedule entries
-                if entries.isEmpty {
-                    emptyState
-                } else {
-                    ForEach(entries) { entry in
-                        PeriodCard(
-                            entry: entry,
-                            isCurrent: isCurrentPeriod(entry)
-                        )
+                    // Schedule entries
+                    if entries.isEmpty {
+                        emptyState
+                    } else {
+                        ForEach(entries) { entry in
+                            PeriodCard(
+                                entry: entry,
+                                isCurrent: isCurrentPeriod(entry)
+                            )
+                            .id(entry.id)
+                        }
+                    }
+                }
+                .padding(Spacing.md)
+            }
+            .background(Color.backgroundPrimary)
+            .onAppear {
+                updateCurrentPeriod()
+                // Scroll to current period
+                if let current = entries.first(where: { isCurrentPeriod($0) }) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        withAnimation {
+                            proxy.scrollTo(current.id, anchor: .center)
+                        }
                     }
                 }
             }
-            .padding(Spacing.md)
-        }
-        .background(Color.backgroundPrimary)
-        .onAppear {
-            updateCurrentPeriod()
         }
     }
 
