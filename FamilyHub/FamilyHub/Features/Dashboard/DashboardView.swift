@@ -11,6 +11,8 @@ import SwiftUI
 struct DashboardView: View {
     let user: User
 
+    @State private var currentDate = Date()
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -21,26 +23,36 @@ struct DashboardView: View {
                             .font(.screenTitle)
                             .foregroundColor(.textPrimary)
 
-                        Text(Date().formatted(style: .long))
+                        Text(currentDate.formatted(style: .long))
                             .font(.subheadline)
                             .foregroundColor(.textSecondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, Spacing.md)
 
-                    // Placeholder content
+                    // Content
                     VStack(spacing: Spacing.md) {
-                        placeholderCard(
-                            icon: "calendar.badge.clock",
-                            title: "Today's Schedule",
-                            description: "Your timetable for today will appear here"
-                        )
+                        if user.isStudent, let timetableData = user.timetableData, timetableData.hasSchedule {
+                            // Today's schedule
+                            TodayScheduleCard(
+                                timetableData: timetableData,
+                                currentDate: currentDate
+                            )
 
-                        placeholderCard(
-                            icon: "bell.badge",
-                            title: "Upcoming",
-                            description: "Next class and reminders"
-                        )
+                            // Upcoming placeholder
+                            placeholderCard(
+                                icon: "bell.badge",
+                                title: "Upcoming",
+                                description: "Next class and reminders"
+                            )
+                        } else {
+                            // No timetable - show placeholder
+                            placeholderCard(
+                                icon: "calendar.badge.clock",
+                                title: "Today's Schedule",
+                                description: user.isStudent ? "Import your timetable to see today's schedule" : "Timetables are available for students"
+                            )
+                        }
 
                         if user.isParent {
                             placeholderCard(
