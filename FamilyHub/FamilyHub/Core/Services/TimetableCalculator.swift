@@ -10,6 +10,32 @@ import Foundation
 
 /// Service for calculating Week 1/2 and current period
 struct TimetableCalculator {
+    /// Fixed period times for UK school schedule
+    /// Period 0 (TUTAM): 08:00-08:45
+    /// Period 1: 08:45-09:45
+    /// Period 2: 09:45-10:45
+    /// Break: 10:45-11:05
+    /// Period 3: 11:05-12:05
+    /// Period 4: 12:05-13:05
+    /// Lunch: 13:05-13:35
+    /// Period 5 (TUTPM): 13:35-14:05
+    /// Period 6: 14:05-15:05
+    static let periodTimes: [Int: (start: String, end: String)] = [
+        0: ("08:00", "08:45"),  // TUTAM
+        1: ("08:45", "09:45"),  // P1
+        2: ("09:45", "10:45"),  // P2
+        3: ("11:05", "12:05"),  // P3 (after break)
+        4: ("12:05", "13:05"),  // P4
+        5: ("13:35", "14:05"),  // TUTPM (after lunch)
+        6: ("14:05", "15:05")   // P5
+    ]
+
+    /// Get start and end times for a period
+    /// - Parameter period: Period number (0-6)
+    /// - Returns: Tuple of (startTime, endTime) or nil if invalid period
+    static func times(for period: Int) -> (start: String, end: String)? {
+        return periodTimes[period]
+    }
     /// Calculate current week based on start date
     /// - Parameter startDate: Date when Week 1 started
     /// - Returns: Current week type (1 or 2)
@@ -53,17 +79,25 @@ struct TimetableCalculator {
             return false
         }
 
-        // If we have start and end times, check if current time is within range
-        if let startTime = entry.startTime, let endTime = entry.endTime {
-            return isTimeBetween(
-                start: startTime,
-                end: endTime,
-                current: date
-            )
+        // Use entry times if available, otherwise use fixed period times
+        let startTime: String
+        let endTime: String
+
+        if let entryStart = entry.startTime, let entryEnd = entry.endTime {
+            startTime = entryStart
+            endTime = entryEnd
+        } else if let times = periodTimes[entry.period] {
+            startTime = times.start
+            endTime = times.end
+        } else {
+            return false
         }
 
-        // If no times specified, we can't determine if it's current
-        return false
+        return isTimeBetween(
+            start: startTime,
+            end: endTime,
+            current: date
+        )
     }
 
     /// Get the next period for a user
@@ -132,7 +166,7 @@ struct TimetableCalculator {
     ///   - end: End time string (e.g., "10:00")
     ///   - current: Current date
     /// - Returns: True if current time is within range
-    private static func isTimeBetween(start: String, end: String, current: Date) -> Bool {
+    static func isTimeBetween(start: String, end: String, current: Date) -> Bool {
         let calendar = Calendar.current
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "HH:mm"

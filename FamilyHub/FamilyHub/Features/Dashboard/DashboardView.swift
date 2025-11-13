@@ -38,13 +38,6 @@ struct DashboardView: View {
                                 timetableData: timetableData,
                                 currentDate: currentDate
                             )
-
-                            // Upcoming placeholder
-                            placeholderCard(
-                                icon: "bell.badge",
-                                title: "Upcoming",
-                                description: "Next class and reminders"
-                            )
                         } else {
                             // No timetable - show placeholder
                             placeholderCard(

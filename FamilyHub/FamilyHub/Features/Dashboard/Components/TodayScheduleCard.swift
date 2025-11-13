@@ -8,6 +8,24 @@
 
 import SwiftUI
 
+/// Represents a scheduled item (period, break, or lunch)
+enum ScheduleItem: Identifiable {
+    case period(ScheduleEntry)
+    case break_
+    case lunch
+
+    var id: String {
+        switch self {
+        case .period(let entry):
+            return entry.id.uuidString
+        case .break_:
+            return "break"
+        case .lunch:
+            return "lunch"
+        }
+    }
+}
+
 /// Card showing today's timetable schedule with current period highlighting
 struct TodayScheduleCard: View {
     let timetableData: TimetableData
@@ -72,22 +90,21 @@ struct TodayScheduleCard: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, Spacing.md)
             } else {
-                // Show classes
-                VStack(spacing: Spacing.xs) {
-                    ForEach(todayEntries.prefix(5)) { entry in
-                        TodayPeriodRow(
-                            entry: entry,
-                            isCurrent: isCurrentPeriod(entry),
-                            isNext: isNextPeriod(entry)
-                        )
-                    }
-
-                    // Show more indicator
-                    if todayEntries.count > 5 {
-                        Text("+ \(todayEntries.count - 5) more")
-                            .font(.caption)
-                            .foregroundColor(.textTertiary)
-                            .padding(.top, Spacing.xxs)
+                // Show schedule with breaks/lunch
+                VStack(spacing: Spacing.xxs) {
+                    ForEach(scheduleItems) { item in
+                        switch item {
+                        case .period(let entry):
+                            TodayPeriodRow(
+                                entry: entry,
+                                isCurrent: isCurrentPeriod(entry),
+                                isNext: isNextPeriod(entry)
+                            )
+                        case .break_:
+                            BreakRow(type: .break_, isCurrent: isCurrentBreak)
+                        case .lunch:
+                            BreakRow(type: .lunch, isCurrent: isCurrentLunch)
+                        }
                     }
                 }
             }
@@ -125,6 +142,27 @@ struct TodayScheduleCard: View {
         timetableData.entries(for: currentWeek, on: dayOfWeek)
     }
 
+    /// Build schedule items including breaks and lunch
+    private var scheduleItems: [ScheduleItem] {
+        var items: [ScheduleItem] = []
+
+        for entry in todayEntries {
+            // Add break after Period 2 (before Period 3)
+            if entry.period == 3 && !items.contains(where: { if case .break_ = $0 { return true }; return false }) {
+                items.append(.break_)
+            }
+
+            items.append(.period(entry))
+
+            // Add lunch after Period 4 (before TUTPM/Period 5)
+            if entry.period == 4 && !items.contains(where: { if case .lunch = $0 { return true }; return false }) {
+                items.append(.lunch)
+            }
+        }
+
+        return items
+    }
+
     private var currentPeriod: ScheduleEntry? {
         todayEntries.first { isCurrentPeriod($0) }
     }
@@ -136,6 +174,22 @@ struct TodayScheduleCard: View {
             return todayEntries.first
         }
         return todayEntries[currentIndex + 1]
+    }
+
+    private var isCurrentBreak: Bool {
+        TimetableCalculator.isTimeBetween(
+            start: "10:45",
+            end: "11:05",
+            current: currentDate
+        )
+    }
+
+    private var isCurrentLunch: Bool {
+        TimetableCalculator.isTimeBetween(
+            start: "13:05",
+            end: "13:35",
+            current: currentDate
+        )
     }
 
     // MARK: - Helper Methods
@@ -162,20 +216,29 @@ struct TodayPeriodRow: View {
     let isNext: Bool
 
     var body: some View {
-        HStack(spacing: Spacing.sm) {
+        HStack(spacing: Spacing.xs) {
+            // Time
+            if let times = TimetableCalculator.times(for: entry.period) {
+                Text(times.start)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundColor(isCurrent ? .primaryApp : .textTertiary)
+                    .frame(width: 38, alignment: .leading)
+            }
+
             // Period label
             Text(entry.periodLabel)
                 .font(.caption2)
                 .fontWeight(.semibold)
-                .foregroundColor(isCurrent ? .white : .textTertiary)
-                .frame(width: 40, alignment: .leading)
+                .foregroundColor(isCurrent ? .white : .textSecondary)
+                .frame(minWidth: 35, alignment: .leading)
                 .padding(.horizontal, Spacing.xxs)
                 .padding(.vertical, 2)
-                .background(isCurrent ? Color.primaryApp : Color.clear)
+                .background(isCurrent ? Color.primaryApp : Color.backgroundTertiary)
                 .cornerRadius(4)
 
-            // Subject
-            VStack(alignment: .leading, spacing: 2) {
+            // Subject and room
+            VStack(alignment: .leading, spacing: 1) {
                 Text(entry.subject)
                     .font(.caption)
                     .fontWeight(isCurrent ? .semibold : .regular)
@@ -185,7 +248,7 @@ struct TodayPeriodRow: View {
                 if !entry.room.isEmpty {
                     Text("Room \(entry.room)")
                         .font(.caption2)
-                        .foregroundColor(.textSecondary)
+                        .foregroundColor(.textTertiary)
                 }
             }
 
@@ -196,7 +259,7 @@ struct TodayPeriodRow: View {
                 HStack(spacing: Spacing.xxs) {
                     Circle()
                         .fill(Color.primaryApp)
-                        .frame(width: 6, height: 6)
+                        .frame(width: 5, height: 5)
 
                     Text("Now")
                         .font(.caption2)
@@ -207,13 +270,101 @@ struct TodayPeriodRow: View {
                 Text("Next")
                     .font(.caption2)
                     .fontWeight(.medium)
-                    .foregroundColor(.textTertiary)
+                    .foregroundColor(.textSecondary)
             }
         }
         .padding(.horizontal, Spacing.xs)
         .padding(.vertical, Spacing.xxs)
         .background(
-            isCurrent ? Color.primaryApp.opacity(0.08) : Color.clear
+            isCurrent ? Color.primaryApp.opacity(0.06) : Color.clear
+        )
+        .cornerRadius(6)
+    }
+}
+
+// MARK: - Break Row
+
+struct BreakRow: View {
+    enum BreakType {
+        case break_
+        case lunch
+
+        var title: String {
+            switch self {
+            case .break_: return "Break"
+            case .lunch: return "Lunch"
+            }
+        }
+
+        var icon: String {
+            switch self {
+            case .break_: return "cup.and.saucer.fill"
+            case .lunch: return "fork.knife"
+            }
+        }
+
+        var times: (start: String, end: String) {
+            switch self {
+            case .break_: return ("10:45", "11:05")
+            case .lunch: return ("13:05", "13:35")
+            }
+        }
+
+        var duration: String {
+            switch self {
+            case .break_: return "20 min"
+            case .lunch: return "30 min"
+            }
+        }
+    }
+
+    let type: BreakType
+    let isCurrent: Bool
+
+    var body: some View {
+        HStack(spacing: Spacing.xs) {
+            // Time
+            Text(type.times.start)
+                .font(.caption2)
+                .fontWeight(.medium)
+                .foregroundColor(isCurrent ? .primaryApp : .textTertiary)
+                .frame(width: 38, alignment: .leading)
+
+            // Icon and label
+            HStack(spacing: Spacing.xxs) {
+                Image(systemName: type.icon)
+                    .font(.caption2)
+                    .foregroundColor(isCurrent ? .orange : .textSecondary)
+
+                Text(type.title)
+                    .font(.caption2)
+                    .fontWeight(isCurrent ? .semibold : .medium)
+                    .foregroundColor(isCurrent ? .orange : .textSecondary)
+
+                Text("(\(type.duration))")
+                    .font(.caption2)
+                    .foregroundColor(.textTertiary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Current indicator
+            if isCurrent {
+                HStack(spacing: Spacing.xxs) {
+                    Circle()
+                        .fill(Color.orange)
+                        .frame(width: 5, height: 5)
+
+                    Text("Now")
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.orange)
+                }
+            }
+        }
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
+        .background(
+            isCurrent ? Color.orange.opacity(0.06) : Color.backgroundSecondary.opacity(0.5)
         )
         .cornerRadius(6)
     }
