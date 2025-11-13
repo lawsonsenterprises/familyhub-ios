@@ -15,9 +15,6 @@ final class TimetableData {
     /// Unique identifier
     @Attribute(.unique) var id: UUID
 
-    /// PDF data for the timetable (optional)
-    var pdfData: Data?
-
     /// Current week type (Week 1 or Week 2)
     var currentWeek: WeekType
 
@@ -52,11 +49,6 @@ final class TimetableData {
 // MARK: - Convenience Methods
 
 extension TimetableData {
-    /// Returns true if a PDF has been imported
-    var hasPDF: Bool {
-        pdfData != nil
-    }
-
     /// Returns true if schedule entries exist
     var hasSchedule: Bool {
         !scheduleEntries.isEmpty

@@ -17,7 +17,6 @@ struct TimetableModuleView: View {
     @State private var selectedWeek: WeekType = .week1
     @State private var viewMode: ViewMode = .week
     @State private var manualOverride: Bool = false
-    @State private var showPDFPicker = false
     @State private var isImporting = false
     @State private var importError: String?
     @State private var showDeleteConfirmation = false
@@ -73,12 +72,6 @@ struct TimetableModuleView: View {
                 if user.timetableData?.hasSchedule == true {
                     ToolbarItemGroup(placement: .navigationBarTrailing) {
                         Menu {
-                            Button {
-                                showPDFPicker = true
-                            } label: {
-                                Label("Re-import PDF", systemImage: "arrow.clockwise.doc")
-                            }
-
                             Button(role: .destructive) {
                                 showDeleteConfirmation = true
                             } label: {
@@ -100,14 +93,7 @@ struct TimetableModuleView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("This will permanently delete all timetable data. You can import a new PDF afterwards.")
-            }
-            .sheet(isPresented: $showPDFPicker) {
-                PDFDocumentPicker(isPresented: $showPDFPicker) { url in
-                    Task {
-                        await importPDF(from: url)
-                    }
-                }
+                Text("This will permanently delete all timetable data. You can import a new timetable afterwards.")
             }
             .overlay {
                 if isImporting {
@@ -162,25 +148,14 @@ struct TimetableModuleView: View {
                     .font(.sectionHeader)
                     .foregroundColor(.textPrimary)
 
-                Text("Import a PDF timetable to get started")
+                Text("Import a CSV file or manually enter your timetable")
                     .font(.body)
                     .foregroundColor(.textSecondary)
                     .multilineTextAlignment(.center)
             }
 
             if user.isStudent {
-                Button {
-                    showPDFPicker = true
-                } label: {
-                    Label("Import Timetable PDF", systemImage: "doc.badge.plus")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.vertical, Spacing.sm)
-                        .background(Color.accentApp)
-                        .clipShape(Capsule())
-                }
-                .disabled(isImporting)
+                // TODO: Phase 2.2a - CSV import button will be added here
 
                 #if DEBUG
                 // Development-only: Sample data for testing without PDF
@@ -308,79 +283,7 @@ struct TimetableModuleView: View {
         isImporting = false
     }
 
-    private func importPDF(from url: URL) async {
-        isImporting = true
-        importError = nil
-
-        do {
-            // Import the PDF data
-            let pdfData = try await PDFService.importPDF(from: url)
-
-            // Extract schedule entries
-            let entries = PDFService.extractScheduleData(from: pdfData)
-
-            print("🔵 Extracted \(entries.count) entries from PDF")
-
-            guard !entries.isEmpty else {
-                importError = "Could not extract timetable data from PDF"
-                isImporting = false
-                return
-            }
-
-            // Create or update timetable data
-            await MainActor.run {
-                if let existingTimetable = user.timetableData {
-                    // Clear existing entries
-                    existingTimetable.scheduleEntries.removeAll()
-
-                    // Add new entries
-                    for entry in entries {
-                        existingTimetable.scheduleEntries.append(entry)
-                    }
-
-                    // Update metadata
-                    existingTimetable.pdfData = pdfData
-                    existingTimetable.markUpdated()
-
-                    // Validate and print report
-                    let report = TimetableValidator.validate(existingTimetable)
-                    TimetableValidator.printReport(report)
-                } else {
-                    // Create new timetable
-                    let timetableData = TimetableData(owner: user)
-                    timetableData.pdfData = pdfData
-
-                    // Add entries
-                    for entry in entries {
-                        timetableData.scheduleEntries.append(entry)
-                    }
-
-                    timetableData.markUpdated()
-                    user.timetableData = timetableData
-                    modelContext.insert(timetableData)
-
-                    // Validate and print report
-                    let report = TimetableValidator.validate(timetableData)
-                    TimetableValidator.printReport(report)
-                }
-
-                // Save context
-                try? modelContext.save()
-
-                // Update selected week
-                updateSelectedWeek()
-
-                print("✅ PDF data imported successfully!")
-            }
-
-            isImporting = false
-        } catch {
-            await MainActor.run {
-                importError = error.localizedDescription
-                isImporting = false
-            }
-        }
-    }
+    // TODO: Phase 2.2a - CSV import method will be added here
 }
 
 #Preview {
