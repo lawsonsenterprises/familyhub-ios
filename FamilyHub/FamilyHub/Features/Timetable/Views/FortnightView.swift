@@ -168,8 +168,8 @@ struct MinimalPeriodCard: View {
                 .lineLimit(1)
 
             HStack(spacing: Spacing.xxs) {
-                if let startTime = entry.startTime {
-                    Text(startTime)
+                if let times = TimetableCalculator.times(for: entry.period) {
+                    Text(times.start)
                         .font(.caption2)
                         .foregroundColor(.textTertiary)
                 }

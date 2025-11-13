@@ -15,7 +15,7 @@ struct TimetableModuleView: View {
     @Environment(\.modelContext) private var modelContext
 
     @State private var selectedWeek: WeekType = .week1
-    @State private var viewMode: ViewMode = .week
+    @State private var viewMode: ViewMode = .day
     @State private var manualOverride: Bool = false
     @State private var isImporting = false
     @State private var importError: String?

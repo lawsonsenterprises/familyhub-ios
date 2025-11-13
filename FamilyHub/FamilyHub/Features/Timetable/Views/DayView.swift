@@ -27,12 +27,14 @@ struct DayView: View {
                     if entries.isEmpty {
                         emptyState
                     } else {
-                        ForEach(entries) { entry in
-                            PeriodCard(
-                                entry: entry,
-                                isCurrent: isCurrentPeriod(entry)
-                            )
-                            .id(entry.id)
+                        VStack(spacing: Spacing.xxs) {
+                            ForEach(entries) { entry in
+                                PeriodCard(
+                                    entry: entry,
+                                    isCurrent: isCurrentPeriod(entry)
+                                )
+                                .id(entry.id)
+                            }
                         }
                     }
                 }
@@ -41,11 +43,16 @@ struct DayView: View {
             .background(Color.backgroundPrimary)
             .onAppear {
                 updateCurrentPeriod()
-                // Scroll to current period
-                if let current = entries.first(where: { isCurrentPeriod($0) }) {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        withAnimation {
+                // Scroll to current or next period
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation {
+                        // Try to scroll to current period first
+                        if let current = entries.first(where: { isCurrentPeriod($0) }) {
                             proxy.scrollTo(current.id, anchor: .center)
+                        }
+                        // Otherwise, scroll to first entry
+                        else if let first = entries.first {
+                            proxy.scrollTo(first.id, anchor: .top)
                         }
                     }
                 }
@@ -115,7 +122,6 @@ struct DayView: View {
     private func isCurrentPeriod(_ entry: ScheduleEntry) -> Bool {
         TimetableCalculator.isCurrentPeriod(
             entry: entry,
-            date: currentDate,
             currentWeek: selectedWeek
         )
     }
@@ -132,67 +138,80 @@ struct PeriodCard: View {
     let isCurrent: Bool
 
     var body: some View {
-        HStack(spacing: Spacing.md) {
-            // Time indicator
-            VStack(alignment: .leading, spacing: Spacing.xxs) {
-                if let startTime = entry.startTime {
-                    Text(startTime)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(isCurrent ? .primaryApp : .textSecondary)
-                }
-
-                if let endTime = entry.endTime {
-                    Text(endTime)
-                        .font(.caption2)
+        HStack(alignment: .top, spacing: Spacing.sm) {
+            // Time column (fixed width)
+            if let times = TimetableCalculator.times(for: entry.period) {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(times.start)
+                        .font(.callout)
+                        .fontWeight(.semibold)
+                        .foregroundColor(isCurrent ? .primaryApp : .textPrimary)
+                    Text(times.end)
+                        .font(.callout)
                         .foregroundColor(.textTertiary)
                 }
+                .frame(width: 50)
             }
-            .frame(width: 50, alignment: .leading)
 
-            // Period info
-            VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text(entry.subject)
-                    .font(.headline)
-                    .foregroundColor(.textPrimary)
+            // Accent bar
+            RoundedRectangle(cornerRadius: 2)
+                .fill(isCurrent ? Color.primaryApp : Color.backgroundTertiary)
+                .frame(width: 3)
 
-                HStack(spacing: Spacing.xs) {
+            // Content
+            VStack(alignment: .leading, spacing: 3) {
+                HStack {
+                    Text(entry.subject)
+                        .font(.body)
+                        .fontWeight(isCurrent ? .semibold : .medium)
+                        .foregroundColor(.textPrimary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    // Current indicator
+                    if isCurrent {
+                        Text("Now")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Color.primaryApp)
+                            .cornerRadius(6)
+                    }
+                }
+
+                HStack(spacing: 4) {
+                    Text(entry.periodLabel)
+                        .font(.caption)
+                        .foregroundColor(.textSecondary)
+
                     if let teacher = entry.teacher {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundColor(.textTertiary)
                         Text(teacher)
-                            .font(.subheadline)
+                            .font(.caption)
                             .foregroundColor(.textSecondary)
                     }
 
                     if !entry.room.isEmpty {
                         Text("•")
+                            .font(.caption)
                             .foregroundColor(.textTertiary)
                         Text("Room \(entry.room)")
-                            .font(.subheadline)
+                            .font(.caption)
                             .foregroundColor(.textSecondary)
                     }
                 }
             }
-
-            Spacer()
-
-            // Current indicator
-            if isCurrent {
-                Circle()
-                    .fill(Color.primaryApp)
-                    .frame(width: 8, height: 8)
-            }
         }
-        .padding(Spacing.md)
+        .padding(.vertical, Spacing.xs)
+        .padding(.horizontal, Spacing.xs)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(isCurrent ? Color.primaryApp.opacity(0.1) : Color.backgroundTertiary)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(
-                    isCurrent ? Color.primaryApp.opacity(0.3) : Color.clear,
-                    lineWidth: 2
-                )
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(isCurrent ? Color.primaryApp.opacity(0.08) : Color.clear)
         )
     }
 }

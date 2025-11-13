@@ -16,19 +16,40 @@ struct WeekView: View {
     private let days: [DayOfWeek] = [.monday, .tuesday, .wednesday, .thursday, .friday]
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: Spacing.sm) {
-                ForEach(days, id: \.self) { day in
-                    DaySection(
-                        day: day,
-                        entries: timetableData.entries(for: selectedWeek, on: day),
-                        isToday: isToday(day)
-                    )
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: Spacing.sm) {
+                    ForEach(days, id: \.self) { day in
+                        DaySection(
+                            day: day,
+                            entries: timetableData.entries(for: selectedWeek, on: day),
+                            isToday: isToday(day),
+                            selectedWeek: selectedWeek
+                        )
+                    }
+                }
+                .padding(Spacing.md)
+            }
+            .background(Color.backgroundPrimary)
+            .onAppear {
+                // Scroll to current or next period
+                let currentDay = currentDayOfWeek()
+                let entries = timetableData.entries(for: selectedWeek, on: currentDay)
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation {
+                        // Try to scroll to current period first
+                        if let current = entries.first(where: { isCurrentPeriod($0) }) {
+                            proxy.scrollTo(current.id, anchor: .center)
+                        }
+                        // Otherwise, scroll to first entry of today
+                        else if let firstToday = entries.first {
+                            proxy.scrollTo(firstToday.id, anchor: .top)
+                        }
+                    }
                 }
             }
-            .padding(Spacing.md)
         }
-        .background(Color.backgroundPrimary)
     }
 
     // MARK: - Helper Methods
@@ -48,6 +69,27 @@ struct WeekView: View {
 
         return weekday == dayNumber
     }
+
+    private func currentDayOfWeek() -> DayOfWeek {
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: Date())
+
+        switch weekday {
+        case 2: return .monday
+        case 3: return .tuesday
+        case 4: return .wednesday
+        case 5: return .thursday
+        case 6: return .friday
+        default: return .monday // Fallback for weekend
+        }
+    }
+
+    private func isCurrentPeriod(_ entry: ScheduleEntry) -> Bool {
+        TimetableCalculator.isCurrentPeriod(
+            entry: entry,
+            currentWeek: selectedWeek
+        )
+    }
 }
 
 // MARK: - Day Section
@@ -56,6 +98,7 @@ struct DaySection: View {
     let day: DayOfWeek
     let entries: [ScheduleEntry]
     let isToday: Bool
+    let selectedWeek: WeekType
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -91,9 +134,13 @@ struct DaySection: View {
                     .foregroundColor(.textTertiary)
                     .padding(.vertical, Spacing.sm)
             } else {
-                VStack(spacing: Spacing.xs) {
+                VStack(spacing: Spacing.xxs) {
                     ForEach(entries) { entry in
-                        CompactPeriodCard(entry: entry)
+                        CompactPeriodCard(
+                            entry: entry,
+                            isCurrent: isToday && isCurrentPeriod(entry)
+                        )
+                        .id(entry.id)
                     }
                 }
             }
@@ -104,50 +151,99 @@ struct DaySection: View {
                 .fill(isToday ? Color.primaryApp.opacity(0.05) : Color.backgroundTertiary)
         )
     }
+
+    // MARK: - Helper Methods
+
+    private func isCurrentPeriod(_ entry: ScheduleEntry) -> Bool {
+        TimetableCalculator.isCurrentPeriod(
+            entry: entry,
+            currentWeek: selectedWeek
+        )
+    }
 }
 
 // MARK: - Compact Period Card
 
 struct CompactPeriodCard: View {
     let entry: ScheduleEntry
+    let isCurrent: Bool
 
     var body: some View {
-        HStack(spacing: Spacing.sm) {
-            // Time
-            if let startTime = entry.startTime {
-                Text(startTime)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.textSecondary)
-                    .frame(width: 45, alignment: .leading)
+        HStack(alignment: .top, spacing: Spacing.sm) {
+            // Time column (fixed width)
+            if let times = TimetableCalculator.times(for: entry.period) {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(times.start)
+                        .font(.callout)
+                        .fontWeight(.semibold)
+                        .foregroundColor(isCurrent ? .primaryApp : .textPrimary)
+                    Text(times.end)
+                        .font(.callout)
+                        .foregroundColor(.textTertiary)
+                }
+                .frame(width: 50)
             }
 
-            // Subject and details
-            VStack(alignment: .leading, spacing: 2) {
-                Text(entry.subject)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(.textPrimary)
+            // Accent bar
+            RoundedRectangle(cornerRadius: 2)
+                .fill(isCurrent ? Color.primaryApp : Color.backgroundTertiary)
+                .frame(width: 3)
 
-                if !entry.room.isEmpty {
-                    Text("Room \(entry.room)")
-                        .font(.caption2)
+            // Content
+            VStack(alignment: .leading, spacing: 3) {
+                HStack {
+                    Text(entry.subject)
+                        .font(.body)
+                        .fontWeight(isCurrent ? .semibold : .medium)
+                        .foregroundColor(.textPrimary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    // Current indicator
+                    if isCurrent {
+                        Text("Now")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Color.primaryApp)
+                            .cornerRadius(6)
+                    }
+                }
+
+                HStack(spacing: 4) {
+                    Text(entry.periodLabel)
+                        .font(.caption)
                         .foregroundColor(.textSecondary)
+
+                    if let teacher = entry.teacher {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundColor(.textTertiary)
+                        Text(teacher)
+                            .font(.caption)
+                            .foregroundColor(.textSecondary)
+                    }
+
+                    if !entry.room.isEmpty {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundColor(.textTertiary)
+                        Text("Room \(entry.room)")
+                            .font(.caption)
+                            .foregroundColor(.textSecondary)
+                    }
                 }
             }
-
-            Spacer()
-
-            // Period label
-            Text(entry.periodLabel)
-                .font(.caption2)
-                .fontWeight(.semibold)
-                .foregroundColor(.textTertiary)
         }
-        .padding(.horizontal, Spacing.sm)
         .padding(.vertical, Spacing.xs)
-        .background(Color.backgroundSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .padding(.horizontal, Spacing.xs)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(isCurrent ? Color.primaryApp.opacity(0.08) : Color.clear)
+        )
     }
 }
 

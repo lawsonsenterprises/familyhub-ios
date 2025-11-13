@@ -2,8 +2,8 @@
 
 **Master tracking document for all development phases**
 
-**Last Updated:** 2025-11-12 (Current session)
-**Current Phase:** Phase 2.2 - PDF Import & Week 1/2 Logic (In Progress)
+**Last Updated:** 2025-11-13 (Current session)
+**Current Phase:** Phase 2.3 - Today View & Current Period Tracking (Complete)
 **Project Location:** `~/Development/Apps/ios/familyhub-ios/`
 
 ---
@@ -16,7 +16,8 @@
 
 ### Phase 2: Timetable Module
 - [x] **Phase 2.1** - Timetable Views (Day, Week, Fortnight) ✅ *Complete*
-- [ ] **Phase 2.2** - PDF Import & Week 1/2 Logic ← **IN PROGRESS**
+- [x] **Phase 2.2** - CSV Import & Data Management ✅ *Complete*
+- [x] **Phase 2.3** - Today View & Current Period Tracking ✅ *Complete*
 
 ### Phase 3: Settings & Polish
 - [ ] **Phase 3.1** - Settings Implementation
@@ -134,7 +135,102 @@ Phase 2.1 foundation is complete. All views are working with sample data. Now re
 
 ---
 
-## Phase 2.2 - Data Import & Manual Entry ⚠️ IN PROGRESS
+## Phase 2.3 - Today View & Current Period Tracking ✅ COMPLETE
+
+### Status: Complete (13 Nov 2025)
+
+### Overview
+Phase 2.3 implemented the Today view dashboard card with real-time current period tracking, including breaks and lunch periods. Extended highlighting and auto-scroll functionality to all timetable views.
+
+### Completed Tasks
+- [x] Create TodayScheduleCard component for Dashboard
+- [x] Implement ScheduleItem enum to mix periods, breaks, and lunch
+- [x] Add fixed period times to TimetableCalculator (UK school schedule)
+- [x] Implement break detection (10:45-11:05, 20 min)
+- [x] Implement lunch detection (13:05-13:35, 30 min)
+- [x] Add "Now" badge for current period/break/lunch
+- [x] Implement blue accent highlighting for current items
+- [x] Add current period highlighting to Day view
+- [x] Add current period highlighting to Week view
+- [x] Implement auto-scroll to current period (Day & Week views)
+- [x] Unify card design across all views
+- [x] Test and verify highlighting during lesson times
+
+### Implementation Highlights
+
+**TodayScheduleCard Features:**
+- Shows all periods with breaks and lunch inserted at correct times
+- Break after Period 2 (10:45-11:05)
+- Lunch after Period 4 (13:05-13:35)
+- Real-time highlighting of current period/break/lunch
+- "Now" badge with blue background for active items
+- Consistent card design matching timetable views
+
+**Current Period Detection:**
+- Fixed period times in TimetableCalculator.periodTimes dictionary
+- Time-based detection using isTimeBetween() method
+- Week and day validation for accurate highlighting
+- Falls back to period times if entry times not set
+
+**Auto-Scroll Functionality:**
+- ScrollViewReader wraps all scrollable views
+- Automatically scrolls to current period on view appear
+- Falls back to first entry if no current period (during breaks/lunch)
+- Smooth animation with 0.1s delay for reliable rendering
+
+**Design Consistency:**
+- Time column (50pt fixed width, right-aligned)
+- Start/end times stacked vertically
+- Vertical accent bar (3pt) - blue when current
+- "Now" badge with blue background
+- Subtle blue tint (0.08 opacity) for current period background
+- Teacher names shown in Week/Day views (not in Today view)
+
+### Key Files Modified
+- `TodayScheduleCard.swift` - Today dashboard card with breaks/lunch
+- `TimetableCalculator.swift` - Fixed period times and time detection
+- `DayView.swift` - Current period highlighting and auto-scroll
+- `WeekView.swift` - Current period highlighting and auto-scroll
+- `DashboardView.swift` - Integration of TodayScheduleCard
+
+### Design Decision: Breaks/Lunch Display
+**Decision:** Show breaks and lunch ONLY on Today tab, NOT on Timetable views
+
+**Rationale:**
+- Today tab = Real-time schedule ("What's happening now?")
+- Timetable tab = Reference schedule ("What classes do I have?")
+- Cleaner timetable views without break clutter
+- Easier to scan and compare days/weeks
+- Separation of concerns: real-time vs reference
+
+### Test Results
+✅ **Today view shows breaks and lunch** between periods
+✅ **Current period highlighting works** during lesson times (time-based)
+✅ **Break highlighting works** during 10:45-11:05
+✅ **Lunch highlighting works** during 13:05-13:35
+✅ **Auto-scroll works** in Day and Week views
+✅ **Design consistent** across all views
+✅ **No highlighting during breaks** in Timetable views (correct behavior)
+
+### What's Ready
+- Complete Today view with real-time tracking
+- Current period highlighting across all views
+- Auto-scroll to current lesson
+- Unified design system
+- Production-ready code (debug logging removed)
+
+### Ready for Phase 3
+Phase 2.3 completes the core timetable functionality. App now has:
+- Full timetable views (Day, Week, Fortnight)
+- CSV import functionality
+- Real-time current period tracking
+- Today dashboard with breaks/lunch
+- Auto-scroll and highlighting
+Ready for Settings implementation and final polish.
+
+---
+
+## Phase 2.2 - Data Import & Manual Entry ✅ COMPLETE
 
 ### Status: In Progress (12 Nov 2025)
 
