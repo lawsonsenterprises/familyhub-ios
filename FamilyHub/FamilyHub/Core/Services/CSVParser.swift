@@ -114,11 +114,11 @@ struct CSVParser {
                 continue
             }
 
-            // Validate Period (can be string now: "TUT", "AM Registration", "1"-"5", "PM Registration")
-            guard var period = parsePeriod(periodStr) else {
+            // Validate Period (TUTAM, 1-5, TUTPM)
+            guard let period = parsePeriod(periodStr) else {
                 errors.append(ParseError(
                     row: rowNumber,
-                    message: "Invalid period value '\(periodStr)'. Must be 'TUT', 'AM Registration', '1'-'5', or 'PM Registration'"
+                    message: "Invalid period value '\(periodStr)'. Must be 'TUTAM', '1'-'5', or 'TUTPM'"
                 ))
                 continue
             }
@@ -130,24 +130,6 @@ struct CSVParser {
                     message: "Subject is required (cannot be empty)"
                 ))
                 continue
-            }
-
-            // Adjust period numbers to account for registration periods
-            // The CSV has: AM Reg (TUT), P1-4, PM Reg (TUT), P5
-            // We need: 0, 1, 2, 3, 4, 5, 6
-            if periodStr.uppercased() == "TUT" {
-                // Count how many entries we have for this week/day combination so far
-                let existingForDay = validEntries.filter { $0.week == week && $0.dayOfWeek == day }.count
-                period = existingForDay
-            } else if let numericPeriod = Int(periodStr), numericPeriod == 5 {
-                // Period 5 comes after PM Registration, so it should be period 6
-                // Check if we already have a PM Registration (period 5) for this day
-                let hasPMReg = validEntries.contains {
-                    $0.week == week && $0.dayOfWeek == day && $0.period == 5
-                }
-                if hasPMReg {
-                    period = 6  // Shift period 5 to period 6
-                }
             }
 
             // Teacher is optional (can be empty)
@@ -233,30 +215,22 @@ struct CSVParser {
     }
 
     /// Parse period value from string
-    /// - Parameter value: Period string ("TUT", "AM Registration", "1"-"5", "PM Registration")
+    /// - Parameter value: Period string ("TUTAM", "1"-"5", "TUTPM")
     /// - Returns: Period number if valid, nil otherwise
     private static func parsePeriod(_ value: String) -> Int? {
         let normalized = value.trimmingCharacters(in: .whitespaces).uppercased()
 
-        // Handle "TUT" (Tutorial/Registration) - need to check subject field to determine AM/PM
-        // For now, we'll map TUT to 0, but this will be refined in the validation
-        if normalized == "TUT" {
-            return 0  // Will be determined by subject (AM/PM Registration)
+        switch normalized {
+        case "TUTAM":
+            return 0  // AM Registration
+        case "TUTPM":
+            return 5  // PM Registration (lunch break)
+        case "1", "2", "3", "4":
+            return Int(normalized)  // Periods 1-4 as-is
+        case "5":
+            return 6  // Period 5 comes after PM Registration
+        default:
+            return nil
         }
-
-        // Check for registration periods
-        if value.lowercased().contains("am") && value.lowercased().contains("registration") {
-            return 0  // AM Registration = Period 0
-        }
-        if value.lowercased().contains("pm") && value.lowercased().contains("registration") {
-            return 6  // PM Registration = Period 6
-        }
-
-        // Try to parse as integer (1-5)
-        if let period = Int(value), period >= 1 && period <= 5 {
-            return period
-        }
-
-        return nil
     }
 }

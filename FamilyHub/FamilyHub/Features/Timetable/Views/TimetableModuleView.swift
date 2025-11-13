@@ -330,75 +330,75 @@ struct TimetableModuleView: View {
         // Amelia's real timetable CSV embedded for testing
         let csvContent = """
 Week,Day,Period,Subject,Teacher,Room
-1,Monday,TUT,AM Registration,KCO,512
+1,Monday,TUTAM,AM Registration,KCO,512
 1,Monday,1,English Language,BBR,53
 1,Monday,2,History,ERE,417
 1,Monday,3,PE,MRO,7
 1,Monday,4,Computer Science,ALW,247
-1,Monday,TUT,PM Registration,KCO,512
+1,Monday,TUTPM,PM Registration,KCO,512
 1,Monday,5,Mathematics,KDN,113
-1,Tuesday,TUT,AM Registration,KCO,512
+1,Tuesday,TUTAM,AM Registration,KCO,512
 1,Tuesday,1,PSHE,KCO,512
 1,Tuesday,2,Religious Education,STR,166
 1,Tuesday,3,Mathematics,KDN,113
 1,Tuesday,4,Science,DPE,256
-1,Tuesday,TUT,PM Registration,KCO,512
+1,Tuesday,TUTPM,PM Registration,KCO,512
 1,Tuesday,5,English Language,BBR,412
-1,Wednesday,TUT,AM Registration,KCO,512
+1,Wednesday,TUTAM,AM Registration,KCO,512
 1,Wednesday,1,Science,DPE,256
 1,Wednesday,2,Religious Education,STR,166
 1,Wednesday,3,Computer Science,NMO,243
 1,Wednesday,4,French,AHE,510
-1,Wednesday,TUT,PM Registration,KCO,512
+1,Wednesday,TUTPM,PM Registration,KCO,512
 1,Wednesday,5,English Language,BBR,412
-1,Thursday,TUT,AM Registration,KCO,512
+1,Thursday,TUTAM,AM Registration,KCO,512
 1,Thursday,1,Science,DPE,256
 1,Thursday,2,History,ERE,516
 1,Thursday,3,Dance,KMO,100
 1,Thursday,4,Mathematics,KDN,113
-1,Thursday,TUT,PM Registration,KCO,512
+1,Thursday,TUTPM,PM Registration,KCO,512
 1,Thursday,5,French,NRU,510
-1,Friday,TUT,AM Registration,KCO,512
+1,Friday,TUTAM,AM Registration,KCO,512
 1,Friday,1,Science,DPE,256
 1,Friday,2,Mathematics,KDN,113
 1,Friday,3,PE,MRO,7
 1,Friday,4,Food,JRY,54
-1,Friday,TUT,PM Registration,KCO,512
+1,Friday,TUTPM,PM Registration,KCO,512
 1,Friday,5,English Language,BBR,412
-2,Monday,TUT,AM Registration,KCO,512
+2,Monday,TUTAM,AM Registration,KCO,512
 2,Monday,1,English Language,BBR,412
 2,Monday,2,Science,DPE,256
 2,Monday,3,PE,MRO,7
 2,Monday,4,PSHE,KCO,512
-2,Monday,TUT,PM Registration,KCO,512
+2,Monday,TUTPM,PM Registration,KCO,512
 2,Monday,5,Mathematics,KDN,113
-2,Tuesday,TUT,AM Registration,KCO,512
+2,Tuesday,TUTAM,AM Registration,KCO,512
 2,Tuesday,1,English Language,BBR,113
 2,Tuesday,2,Mathematics,KDN,166
 2,Tuesday,3,Religious Education,STR,166
 2,Tuesday,4,Geography,DTE,45
-2,Tuesday,TUT,PM Registration,KCO,512
+2,Tuesday,TUTPM,PM Registration,KCO,512
 2,Tuesday,5,Computer Science,NMO,243
-2,Wednesday,TUT,AM Registration,KCO,512
+2,Wednesday,TUTAM,AM Registration,KCO,512
 2,Wednesday,1,History,ERE,44
 2,Wednesday,2,Geography,DTE,45
 2,Wednesday,3,Dance,KMO,100
 2,Wednesday,4,Arts Award,EBR,65
-2,Wednesday,TUT,PM Registration,KCO,512
+2,Wednesday,TUTPM,PM Registration,KCO,512
 2,Wednesday,5,Science,DPE,256
-2,Thursday,TUT,AM Registration,KCO,512
+2,Thursday,TUTAM,AM Registration,KCO,512
 2,Thursday,1,Dance,KMO,100
 2,Thursday,2,Mathematics,KDN,113
 2,Thursday,3,Geography,DTE,45
 2,Thursday,4,Science,DPE,256
-2,Thursday,TUT,PM Registration,KCO,512
+2,Thursday,TUTPM,PM Registration,KCO,512
 2,Thursday,5,English Language,BBR,412
-2,Friday,TUT,AM Registration,KCO,512
+2,Friday,TUTAM,AM Registration,KCO,512
 2,Friday,1,French,AHE,510
 2,Friday,2,Science,DPE,256
 2,Friday,3,PE,MRO,7
 2,Friday,4,Mathematics,KDN,113
-2,Friday,TUT,PM Registration,KCO,512
+2,Friday,TUTPM,PM Registration,KCO,512
 2,Friday,5,English Language,BBR,Library
 """
 
