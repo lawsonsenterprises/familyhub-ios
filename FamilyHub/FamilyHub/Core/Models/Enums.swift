@@ -43,6 +43,17 @@ enum DayOfWeek: String, Codable, CaseIterable {
         case .friday: return "calendar"
         }
     }
+
+    /// Short name for the day (3 letters)
+    var shortName: String {
+        switch self {
+        case .monday: return "Mon"
+        case .tuesday: return "Tue"
+        case .wednesday: return "Wed"
+        case .thursday: return "Thu"
+        case .friday: return "Fri"
+        }
+    }
 }
 
 /// Timetable view modes

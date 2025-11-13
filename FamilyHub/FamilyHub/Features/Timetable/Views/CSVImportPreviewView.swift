@@ -219,7 +219,7 @@ struct CSVImportPreviewView: View {
                 .cornerRadius(4)
 
             // Group by day
-            ForEach(DayOfWeek.allCases, id: \.self) { day in
+            ForEach(Array(DayOfWeek.allCases), id: \.self) { day in
                 let dayEntries = entries.filter { $0.dayOfWeek == day }
                 if !dayEntries.isEmpty {
                     HStack(spacing: Spacing.xs) {
